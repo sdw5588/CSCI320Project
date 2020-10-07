@@ -2,9 +2,14 @@ import psycopg2  # pip install psycorg2
 
 NAME = 'PythonAPP'
 
-
 def main():
-    conn = psycopg2.connect("dbname=p320_26 user=p320_26 password=eewier5eix2ag3ohChoo host=reddwarf.cs.rit.edu")
+
+    f = open("creds.txt", "r")
+    usr = f.readline().rstrip()
+    passwd = f.readline().rstrip()
+    #print("dbname="+ usr + " user= " + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu", sep = "")
+
+    conn = psycopg2.connect("dbname="+ usr + " user= " + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu")
     print("Connected with " + conn.dsn)
 
     cur = conn.cursor()
@@ -17,7 +22,6 @@ def main():
 
     cur.close()
     conn.close()
-
 
 if __name__ == '__main__':
     main()
