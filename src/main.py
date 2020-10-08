@@ -42,6 +42,7 @@ def start():
     if n == 0:
         os.system('cls')
         print(' -- -- -- Thank You -- -- -')
+        exit(0)
     elif n == 1:
         os.system('cls')
         registerUser()
@@ -70,15 +71,6 @@ def registerUser():
     sleep(.5)
     start()
 
-
-def showUserMenu():
-    print(' -- -- -- User MENU -- -- -')
-    print(' 0. Exit')
-    print(' 1. Add Tool')
-    print(' -- -- -- -- -- -- -- -- -- -- ')
-
-
-
 def getUserName():
     global conn
     cursor = conn.cursor()
@@ -93,10 +85,18 @@ def getUserName():
     name = cursor.fetchall()
 
     if len(name) == 1:
-        userMenu(id, name)
+        userMenu(id, name[0])
     else:
         print('Please enter a valid user_id')
         getUserName()
+
+
+def showUserMenu():
+    print(' -- -- -- User MENU -- -- -')
+    print(' 0. Exit')
+    print(' 1. Add Tool')
+    print(' 2. Add Collection')
+    print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
 def userMenu(id, user_name):
@@ -106,13 +106,14 @@ def userMenu(id, user_name):
     n = int(input('Enter option : '))
     if n == 0:
         os.system('cls')
-        print(' -- -- -- Thank You -- -- -')
+        start()
     elif n == 1:
         os.system('cls')
         addTool(id)
     else:
         os.system('cls')
         start()
+    userMenu(id, user_name)
 
 
 
@@ -159,6 +160,7 @@ def addTool(id):
         cursor.execute(sql, (id, barcode, buy_date))
 
     conn.commit()
+
 
 
 
