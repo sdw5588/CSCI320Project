@@ -55,12 +55,31 @@ def start():
 
 def registerUser():
     global conn
+    cursor = conn.cursor()
 
-    id = input('Enter user id : ')
+    # Get a lits of all user ids
+    sql = '''
+    SELECT "id" FROM "user"
+    '''
+    cursor.execute(sql)
+    all_uid = cursor.fetchall()
+
+    # Gotta make sure uids arent reused
+    valid_uid = False
+    while valid_uid == False:
+        id = int(input('Enter user id : '))
+
+        for uid in all_uid:
+            #print(uid[0])
+            if uid[0] == id:
+                print('That user_id already exists!')
+                break
+            else:
+                valid_uid = True
+
     fname = input('Enter user first_name : ')
     lname = input('Enter user last_name : ')
 
-    cursor = conn.cursor()
     sql = '''
     INSERT INTO "user" ("id", "first_name", "last_name")
     VALUES (%s, %s, %s)
@@ -124,35 +143,77 @@ def userMenu(id, user_name):
 
 def addTool(id):
     global conn
+    cursor = conn.cursor()
 
-    barcode = input('Enter tool barcode : ')
+    # Get a lits of all tool barcodes
+    sql = '''
+    SELECT "barcode" FROM "tool"
+    '''
+    cursor.execute(sql)
+    all_barcodes = cursor.fetchall()
+
+    # Gotta make sure barcodes arent reused
+    valid_barcode = False
+    while valid_barcode == False:
+        barcode = int(input('Enter tool barcode : '))
+
+        for bc in all_barcodes:
+            #print(bc[0])
+            if bc[0] == barcode:
+                print('That barcode already exists!')
+                valid_barcode = False
+                break
+            else:
+                valid_barcode = True
+
     name = input('Enter tool name : ')
     lend = input('Is the tool lendable? (y/n): ')
     if lend == "n":
         lend = False
     else:
         lend == True
-    # category = input('Enter cat_name\nOr n for no category : ')
 
-    cursor = conn.cursor()
+    # Get a list of all categories
+    sql = '''
+    SELECT "cat_name" FROM "category"
+    '''
+    cursor.execute(sql)
+    all_cats = cursor.fetchall() # look at this cat --> (,,,)=(^..^)=(,,,)
 
+    print(' -- Existing Categories are -- ')
+    cat_list = []
+    new_cat = True
+    for cat in all_cats:
+        cat_list.append(cat[0])
+        print(cat[0])
+    print(' -- -- ')
+
+    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ')
+
+    if category in cat_list:
+        new_cat = False
+
+    # Add to tool table
     sql ='''
     INSERT INTO "tool" ("barcode", "name", "lendable")
     VALUES (%s, %s, %s)
     '''
     cursor.execute(sql, (barcode, name, lend))
 
-    # if category != "n":
-    #     sql ='''
-    #     INSERT INTO "category" ("cat_name")
-    #     VALUES (%s)
-    #     '''
-    #     cursor.execute(sql, (category,))
-    #     sql ='''
-    #     INSERT INTO "is_in" ("cat_name", "barcode")
-    #     VALUES (%s, %s)
-    #     '''
-    #     cursor.execute(sql, (category, barcode))
+    if new_cat:
+        # add in new category
+        sql ='''
+        INSERT INTO "category" ("cat_name")
+        VALUES (%s)
+        '''
+        cursor.execute(sql, (category,))
+
+    # add in category relation
+    sql ='''
+    INSERT INTO "is_in" ("cat_name", "barcode")
+    VALUES (%s, %s)
+    '''
+    cursor.execute(sql, (category, barcode))
 
     if id != '':# you can use the function to add non-owned tools :)
 
