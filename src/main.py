@@ -29,7 +29,7 @@ def main():
 
 
 def showMainMenu():
-    print(' -- -- -- -- MENU -- -- -- -')
+    print(' -- -- -- -- MAIN MENU -- -- -- -- ')
     print(' 0. Exit')
     print(' 1. Register User')
     print(' 2. User Menu')
@@ -92,10 +92,11 @@ def getUserName():
 
 
 def showUserMenu():
-    print(' -- -- -- User MENU -- -- -')
-    print(' 0. Exit')
+    print(' -- -- -- User Menu -- -- -- ')
+    print(' 0. Back')
     print(' 1. Add Tool')
-    print(' 2. Add Collection')
+    print(' 2. Edit Tool')
+    print(' 3. Add Collection')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
@@ -110,6 +111,10 @@ def userMenu(id, user_name):
     elif n == 1:
         os.system('cls')
         addTool(id)
+    elif n == 2:
+        os.system('cls')
+        editTool(id)
+        print(user_name[0])
     else:
         os.system('cls')
         start()
@@ -161,6 +166,71 @@ def addTool(id):
 
     conn.commit()
 
+def editTool(id):
+    global conn
+
+    cursor = conn.cursor()
+    # Get a lits of the User's Owned Tools
+    sql = '''
+    SELECT "barcode", "name" FROM "tool"
+    WHERE "barcode" IN (
+        SELECT "barcode" FROM "owns"
+        WHERE "user_id" = %s AND "sold_date" IS NULL
+    );
+    '''
+    cursor.execute(sql, (id,))
+    tools = cursor.fetchall()
+    # Print out the users tools
+    print('-- -- YOUR TOOLS -- --')
+    barcodes = [] # their barcodes
+    tool_names = []
+    selected_tool = False
+
+    for tool in tools:
+        print(tool[0], tool[1], sep='\t')
+        barcodes.append(tool[0])
+        tool_names.append(tool[1])
+
+    while selected_tool == False:
+        barcode = int(input('Enter the tool barcode : '))
+
+        if barcode in barcodes:
+            # Its actually their tool
+            toolEdit(id, barcode, tool_names[barcodes.index(barcode)])
+            selected_tool = True
+        else:
+            #not their tool
+            print('You dont own that tool, or it doesnt exist')
+
+
+
+
+
+def showToolEdit():
+    print(' -- -- -- Tool EDITOR -- -- -- ')
+    print(' 0. Back')
+    print(' 1. Change Name')
+    print(' 2. Lend Tool')
+    print(' 3. Add to Collection')
+    print(' -- -- -- -- -- -- -- -- -- -- ')
+
+
+def toolEdit(id, barcode, tool_name):
+    os.system('cls')
+    print('Editing:', tool_name)
+    showToolEdit()
+    n = int(input('Enter option : '))
+    if n == 0:
+        os.system('cls')
+    elif n == 1: # change name
+        os.system('cls')
+    elif n == 2: # Lend
+        os.system('cls')
+    elif n == 3: # add to collection
+        os.system('cls')
+    else:
+        os.system('cls')
+        start()
 
 
 
