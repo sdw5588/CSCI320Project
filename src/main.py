@@ -10,7 +10,7 @@ conn = object
 def main():
     global conn
 
-    f = open("creds.txt", "r")
+    f = open("creds.txt", "r") ## you need to make a file called creds.txt with the username on the first line and password on the next one
     usr = f.readline().rstrip()
     passwd = f.readline().rstrip()
     #print("dbname="+ usr + " user= " + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu", sep = "")
