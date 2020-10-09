@@ -3,6 +3,8 @@ import random
 import os
 from time import sleep
 import datetime
+from tabulate import tabulate
+
 
 NAME = 'PythonAPP'
 conn = object
@@ -28,11 +30,18 @@ def main():
     conn.close()
 
 
+###############################################################################
+##                       MAIN MENU ITEMS
+###############################################################################
+
+
 def showMainMenu():
     print(' -- -- -- -- MAIN MENU -- -- -- -- ')
     print(' 0. Exit')
     print(' 1. Register User')
     print(' 2. User Menu')
+    print(' 3. Browse Tools')
+    print(' 4. List Users')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 def start():
@@ -43,12 +52,21 @@ def start():
         os.system('cls')
         print(' -- -- -- Thank You -- -- -')
         exit(0)
+    #register user
     elif n == 1:
         os.system('cls')
         registerUser()
+    #User Menu
     elif n == 2:
         os.system('cls')
         getUserName()
+    #Browse tools
+    elif n == 1:
+        os.system('cls')
+    #List Users
+    elif n == 2:
+        os.system('cls')
+        showAllUsers(None) # if an id is specified it shows all but that id
     else:
         os.system('cls')
         start()
@@ -90,6 +108,47 @@ def registerUser():
     sleep(.7)
     cursor.close()
     start()
+
+def showAllUsers(id):
+    global conn
+    cursor = conn.cursor()
+
+    if id == None:
+        # Get a list of all users
+        sql = '''
+        SELECT "id", "first_name", "last_name" FROM "user"
+        '''
+    else:
+        # Get a list of all users but the id
+        sql = '''
+        SELECT "id", "first_name", "last_name" FROM "user"
+        WHERE "id" != %s
+        '''
+
+    cursor.execute(sql, (id,))
+    all_users = cursor.fetchall()
+
+    print(' -- -- Users -- -- ')
+    #print('--ID--', '-FIRST-', '-LAST-', sep='\t')
+    id_list = []
+    fname_list = []
+    lname_list = []
+    i = 0
+    for user in all_users:
+        id_list.append(user[0])
+        fname_list.append(user[1])
+        lname_list.append(user[2])
+        #print(id_list[i], fname_list[i], lname_list[i], sep='\t')
+        i += 1
+
+    print(tabulate(all_users, headers=['ID', 'FIRST', 'LAST']))
+    print(' -- -- ')
+
+    return (id_list, fname_list, lname_list)
+
+###############################################################################
+##                        USER MENU
+###############################################################################
 
 def getUserName():
     global conn
@@ -142,6 +201,7 @@ def userMenu(id, user_name):
     # View my Tools
     elif n == 3:
         os.system('cls')
+        viewTools(id)
     # View my collections
     elif n == 4:
         os.system('cls')
@@ -242,31 +302,54 @@ def addTool(id):
     print('...Tool successfully added')
     sleep(.7)
 
+def viewTools(id):
+        global conn
+        cursor = conn.cursor()
+
+        if id == None:
+            # Show all tools
+            sql = '''
+            SELECT "barcode", "name", "lendable" FROM "tool"
+            '''
+        else:
+            # Get a lits of the User's Owned Tools
+            sql = '''
+            SELECT "barcode", "name", "lendable" FROM "tool"
+            WHERE "barcode" IN (
+                SELECT "barcode" FROM "owns"
+                WHERE "user_id" = %s AND "sold_date" IS NULL
+            );
+            '''
+        cursor.execute(sql, (id,))
+        tools = cursor.fetchall()
+        # Print out the users tools
+        print(' -- -- YOUR TOOLS -- -- ')
+        barcodes = [] # their barcodes
+        tool_names = []
+        lend_list = []
+
+        for tool in tools:
+            #print(tool[0], tool[1], tool[2], sep='\t')
+            barcodes.append(tool[0])
+            tool_names.append(tool[1])
+            lend_list.append(tool[2])
+        print(tabulate(tools, headers=['BARCODE', 'NAME', 'LEND']))
+
+        return (barcodes, tool_names, lend_list)
+
+
+###############################################################################
+##                        EDIT TOOL SUB MENU
+###############################################################################
+
 def editTool(id):
     global conn
 
     cursor = conn.cursor()
-    # Get a lits of the User's Owned Tools
-    sql = '''
-    SELECT "barcode", "name" FROM "tool"
-    WHERE "barcode" IN (
-        SELECT "barcode" FROM "owns"
-        WHERE "user_id" = %s AND "sold_date" IS NULL
-    );
-    '''
-    cursor.execute(sql, (id,))
-    tools = cursor.fetchall()
-    # Print out the users tools
-    print('-- -- YOUR TOOLS -- --')
-    barcodes = [] # their barcodes
-    tool_names = []
+
     selected_tool = False
 
-    for tool in tools:
-        print(tool[0], tool[1], sep='\t')
-        barcodes.append(tool[0])
-        tool_names.append(tool[1])
-    print(' -- -- ')
+    barcodes, tool_names, lend_list = viewTools(id)
 
     while selected_tool == False:
         barcode = int(input('Enter the tool barcode : '))
@@ -274,7 +357,7 @@ def editTool(id):
         if barcode in barcodes:
             # Its actually their tool
             cursor.close()
-            toolEdit(id, barcode, tool_names[barcodes.index(barcode)])
+            toolEdit(id, barcode, tool_names[barcodes.index(barcode)], lend_list[barcodes.index(barcode)])
             selected_tool = True
         else:
             #not their tool
@@ -294,7 +377,7 @@ def showToolEdit():
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
-def toolEdit(id, barcode, tool_name):
+def toolEdit(id, barcode, tool_name, lendable):
     os.system('cls')
     print('Editing:', tool_name)
     showToolEdit()
@@ -306,7 +389,7 @@ def toolEdit(id, barcode, tool_name):
         changeName(id, barcode, tool_name)
     elif n == 2: # Lend
         os.system('cls')
-        lend(id, barcode, tool_name)
+        lend(id, barcode, tool_name, lendable)
     elif n == 3: # add to collection
         os.system('cls')
         addToCollection(id, barcode, tool_name)
@@ -339,9 +422,32 @@ def changeName(id, barcode, tool_name):
     sleep(.7)
     cursor.close()
 
-def lend(id, barcode, tool_name):
-    ## TODO: Write the function
-    pass
+def lend(id, barcode, tool_name, lendable):
+
+    if lendable == False:
+        print(tool_name, 'is not marked as lendable, would you like to change this and lend anyways?')
+        force_lend = input('\n(y/n): ')
+        if force_lend == y:
+            # makeLendable(barcode)
+        else:
+            return
+
+    id_list, fname_list, lname_list = showAllUsers(id)
+
+    correct_id = False
+
+    while correct_id == False:
+        borrow_id = input('Enter the id of the Borrower : ')
+
+        if borrow_id in id_list:
+            correct_id = True
+        else:
+            print('That is not a valid ID, try again...\n')
+
+
+
+
+
 
 def addToCollection(id, barcode, tool_name):
     global conn
@@ -437,7 +543,9 @@ def sell(id, barcode, tool_name):
     ## TODO: Write the function
     pass
 
-
+###############################################################################
+##                        OLD FUNCTIONS / DEBUGGING
+###############################################################################
 
 def addTest(conn, id, info, owner, rented):
     # where the fun begins
