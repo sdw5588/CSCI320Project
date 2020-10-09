@@ -344,6 +344,7 @@ def view_tools(usr_id):
         lend_list.append(tool[2])
 
     print(tabulate(tools, headers=['BARCODE', 'NAME', 'LEND']))
+    print(' -- -- ')
 
     return barcodes, tool_names, lend_list
 
@@ -363,7 +364,11 @@ def edit_tool(usr_id):
     barcodes, tool_names, lend_list = view_tools(usr_id)
 
     while not selected_tool:
-        barcode = int(input('Enter the tool barcode : '))
+
+        try:
+            barcode = int(input('Enter the tool barcode to edit : '))
+        except ValueError:
+            print('Please enter a number')
 
         if barcode in barcodes:
             # Its actually their tool
