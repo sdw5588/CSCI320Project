@@ -47,7 +47,10 @@ def showMainMenu():
 def start():
     os.system('cls')
     showMainMenu()
-    n = int(input('Enter option : '))
+    try:
+        n = int(input('Enter option : '))
+    except ValueError:
+        n = -1
     if n == 0:
         os.system('cls')
         print(' -- -- -- Thank You -- -- -')
@@ -428,6 +431,7 @@ def lend(id, barcode, tool_name, lendable):
         print(tool_name, 'is not marked as lendable, would you like to change this and lend anyways?')
         force_lend = input('\n(y/n): ')
         if force_lend == y:
+            pass
             # makeLendable(barcode)
         else:
             return
