@@ -321,7 +321,7 @@ def view_tools(usr_id):
         SELECT "barcode", "name", "lendable" FROM "tool"
         '''
     else:
-        # Get a lits of the User's Owned Tools
+        # Get a list of the User's Owned Tools
         sql = '''
         SELECT "barcode", "name", "lendable" FROM "tool"
         WHERE "barcode" IN (
@@ -342,7 +342,8 @@ def view_tools(usr_id):
         barcodes.append(tool[0])
         tool_names.append(tool[1])
         lend_list.append(tool[2])
-        print(tabulate(tools, headers=['BARCODE', 'NAME', 'LEND']))
+
+    print(tabulate(tools, headers=['BARCODE', 'NAME', 'LEND']))
 
     return barcodes, tool_names, lend_list
 
