@@ -1,0 +1,13 @@
+0.1.2 -- 10/09/2020
++ basic main menu
++ user menu
++ ability to add users
++ add tools to users
++ change names of tools
++ add tools to categories and change categories
++ general refactor
+
+ROADMAP
++
+
+* Organize
