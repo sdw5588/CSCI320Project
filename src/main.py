@@ -5,7 +5,7 @@ from time import sleep
 import datetime
 from tabulate import tabulate
 
-#TESTING GIT PUSH_____
+#TESTING AGAIN FOR GIT VIA CMD
 
 NAME = 'PythonAPP'
 conn = object
