@@ -49,34 +49,34 @@ def show_main_menu():
 
 
 def start():
-    os.system('cls')
-    show_main_menu()
-    try:
-        n = int(input('Enter option : '))
-    except ValueError:
-        n = -1
-    if n == 0:
+    while True:
         os.system('cls')
-        print(' -- -- -- Thank You -- -- -')
-        exit(0)
-    # register user
-    elif n == 1:
-        os.system('cls')
-        register_user()
-    # User Menu
-    elif n == 2:
-        os.system('cls')
-        get_user_name()
-    # Browse tools
-    elif n == 1:
-        os.system('cls')
-    # List Users
-    elif n == 2:
-        os.system('cls')
-        show_all_users(None)  # if an id is specified it shows all but that id
-    else:
-        os.system('cls')
-        start()
+        show_main_menu()
+        try:
+            n = int(input('Enter option : '))
+        except ValueError:
+            n = -1
+        if n == 0:
+            os.system('cls')
+            print(' -- -- -- Thank You -- -- -')
+            exit(0)
+        # register user
+        elif n == 1:
+            os.system('cls')
+            register_user()
+        # User Menu
+        elif n == 2:
+            os.system('cls')
+            get_user_name()
+        # Browse tools
+        elif n == 1:
+            os.system('cls')
+        # List Users
+        elif n == 2:
+            os.system('cls')
+            show_all_users(None)  # if an id is specified it shows all but that id
+        else:
+            os.system('cls')
 
 
 def register_user():
@@ -115,7 +115,6 @@ def register_user():
     print("...User added successfully!")
     sleep(.7)
     cursor.close()
-    start()
 
 
 def show_all_users(usr_id):
@@ -161,24 +160,25 @@ def show_all_users(usr_id):
 
 
 def get_user_name():
-    global conn
-    cursor = conn.cursor()
+    while True:
+        global conn
+        cursor = conn.cursor()
 
-    usr_id = input('Enter your user id : ')
+        usr_id = input('Enter your user id : ')
 
-    sql = '''
-    SELECT "first_name", "last_name" FROM "user"
-    WHERE "id"=%s;
-    '''
-    cursor.execute(sql, (usr_id,))
-    name = cursor.fetchall()
+        sql = '''
+        SELECT "first_name", "last_name" FROM "user"
+        WHERE "id"=%s;
+        '''
+        cursor.execute(sql, (usr_id,))
+        name = cursor.fetchall()
 
-    if len(name) == 1:
-        cursor.close()
-        user_menu(usr_id, name[0])
-    else:
-        print('Please enter a valid user_id')
-        get_user_name()
+        if len(name) == 1:
+            cursor.close()
+            user_menu(usr_id, name[0])
+            return
+        else:
+            print('Please enter a valid user_id')
 
 
 def show_user_menu():
@@ -192,33 +192,32 @@ def show_user_menu():
 
 
 def user_menu(usr_id, user_name):
-    os.system('cls')
-    print('Hello,', user_name[0])
-    show_user_menu()
-    n = int(input('Enter option : '))
-    # exit
-    if n == 0:
+    while True:
         os.system('cls')
-        start()
-    # add tool
-    elif n == 1:
-        os.system('cls')
-        add_tool(usr_id)
-    # edit tool
-    elif n == 2:
-        os.system('cls')
-        edit_tool(usr_id)
-    # View my Tools
-    elif n == 3:
-        os.system('cls')
-        view_tools(usr_id)
-    # View my collections
-    elif n == 4:
-        os.system('cls')
-    else:
-        os.system('cls')
-        start()
-    user_menu(usr_id, user_name)
+        print('Hello,', user_name[0])
+        show_user_menu()
+        n = int(input('Enter option : '))
+        # exit
+        if n == 0:
+            os.system('cls')
+            return
+        # add tool
+        elif n == 1:
+            os.system('cls')
+            add_tool(usr_id)
+        # edit tool
+        elif n == 2:
+            os.system('cls')
+            edit_tool(usr_id)
+        # View my Tools
+        elif n == 3:
+            os.system('cls')
+            view_tools(usr_id)
+        # View my collections
+        elif n == 4:
+            os.system('cls')
+        else:
+            os.system('cls')
 
 
 def add_tool(usr_id):
@@ -416,7 +415,6 @@ def tool_edit(usr_id, barcode, tool_name, lendable):
         sell(usr_id, barcode, tool_name)
     else:
         os.system('cls')
-        start()
 
 
 def change_name(usr_id, barcode, tool_name):
