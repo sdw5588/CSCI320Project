@@ -22,11 +22,13 @@ def main():
 
     conn = psycopg2.connect("dbname=" + usr + " user= " + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu")
     print("Connected with " + conn.dsn)
+    os.system('cls')
 
     # now we can start the PythonAPP
 
     # addTest(conn, random.randint(100, 1000), 'This was done by a robot', 'PythonAPP', True)
     # getFromTable()
+    lend(999, 91, "2", True)
 
     start()
 
@@ -90,6 +92,7 @@ def register_user():
     cursor.execute(sql)
     all_uid = cursor.fetchall()
 
+    '''
     # Gotta make sure uids arent reused
     valid_uid = False
     while not valid_uid:
@@ -103,14 +106,16 @@ def register_user():
             else:
                 valid_uid = True
 
+    '''
+
     f_name = input('Enter user first_name : ')
     l_name = input('Enter user last_name : ')
 
     sql = '''
-    INSERT INTO "user" ("id", "first_name", "last_name")
-    VALUES (%s, %s, %s)
+    INSERT INTO "user" ("first_name", "last_name")
+    VALUES (%s, %s)
     '''
-    cursor.execute(sql, (usr_id, f_name, l_name))
+    cursor.execute(sql, (f_name, l_name))
     conn.commit()
     print("...User added successfully!")
     sleep(.7)
@@ -160,6 +165,9 @@ def show_all_users(usr_id):
 
 
 def get_user_name():
+
+    show_all_users(None)
+
     while True:
         global conn
         cursor = conn.cursor()
@@ -213,9 +221,11 @@ def user_menu(usr_id, user_name):
         elif n == 3:
             os.system('cls')
             view_tools(usr_id)
+            input('Press Enter to return...')
         # View my collections
         elif n == 4:
             os.system('cls')
+            show_collections(user_id)
         else:
             os.system('cls')
 
@@ -348,6 +358,41 @@ def view_tools(usr_id):
 
     return barcodes, tool_names, lend_list
 
+def show_collections(user_id):
+    global conn
+    cursor = conn.cursor()
+
+    # Get a list of all collections
+    sql = '''
+    SELECT "coll_name" FROM "collection"
+    '''
+    cursor.execute(sql)
+    all_colls = cursor.fetchall()
+
+    print(' -- Existing Collections are -- ')
+    coll_list = []
+    new_coll = True
+    for coll in all_colls:
+        coll_list.append(coll[0])
+    print(tabulate(coll_list, headers=['COLLECTION']))
+    print(' -- -- ')
+
+def show_tools_in_coll(user_id):
+    global conn
+    cursor = conn.cursor()
+
+    coll_name = input('Enter the collection name to see tools in it : ')
+
+    sql = '''
+    SELECT "barcode", "name" FROM
+    '''
+    cursor.execute(sql, (collection, usr_id, barcode))
+
+
+
+
+
+
 
 ###############################################################################
 #                         EDIT TOOL SUB MENU
@@ -368,7 +413,8 @@ def edit_tool(usr_id):
         try:
             barcode = int(input('Enter the tool barcode to edit : '))
         except ValueError:
-            print('Please enter a number')
+            barcode = ''
+            print('Please enter a number...')
 
         if barcode in barcodes:
             # Its actually their tool
@@ -453,7 +499,7 @@ def lend(usr_id, barcode, tool_name, lendable):
     correct_id = False
 
     while not correct_id:
-        borrow_id = input('Enter the id of the Borrower : ')
+        borrow_id = input('Enter the id of the user to lend to : ')
 
         if borrow_id in id_list:
             correct_id = True
@@ -464,21 +510,6 @@ def lend(usr_id, barcode, tool_name, lendable):
 def add_to_collection(usr_id, barcode, tool_name):
     global conn
     cursor = conn.cursor()
-
-    # Get a list of all collections
-    sql = '''
-    SELECT "coll_name" FROM "collection"
-    '''
-    cursor.execute(sql)
-    all_colls = cursor.fetchall()
-
-    print(' -- Existing Collections are -- ')
-    coll_list = []
-    new_coll = True
-    for coll in all_colls:
-        coll_list.append(coll[0])
-        print(coll[0])
-    print(' -- -- ')
 
     collection = input('\nEnter collection name\nIf that collection does not exist it will be made : ')
 
