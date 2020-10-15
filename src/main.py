@@ -2,7 +2,7 @@ import psycopg2  # pip install psycorg2
 import random
 import os
 from time import sleep
-import datetime
+from datetime import datetime, timedelta
 from tabulate import tabulate
 
 #TESTING AGAIN FOR GIT VIA CMD
@@ -28,6 +28,9 @@ def main():
 
     # addTest(conn, random.randint(100, 1000), 'This was done by a robot', 'PythonAPP', True)
     #get_user_name()
+    #lend('maga', 78, 'putter', False)
+    get_tools_in_coll('uname', 'golf bag')
+    input(">")
 
     start()
 
@@ -72,6 +75,7 @@ def start():
         # Browse tools by: all / category / collection
         elif n == 3:
             os.system('cls')
+            browse_tools()
         # List Users
         elif n == 4:
             os.system('cls')
@@ -159,6 +163,11 @@ def show_all_users(uname):
 
     return uname_list, f_name_list, l_name_list
 
+def browse_tools():
+    pass
+    ## TODO: write function to browse by: all / category / collection
+
+
 ###############################################################################
 #                         USER MENU
 ###############################################################################
@@ -174,8 +183,8 @@ def get_user_name():
 
         usr_name = input('Enter your username : ')
 
-        print(usr_name)
-        print(uname_list)
+        #print(usr_name)
+        #print(uname_list)
 
         sql = '''
         SELECT "first_name", "last_name" FROM "user"
@@ -184,7 +193,7 @@ def get_user_name():
         cursor.execute(sql, (usr_name,))
         name = cursor.fetchall()
 
-        print(name)
+        #print(name)
 
         if len(name) == 1:
             cursor.close()
@@ -234,6 +243,7 @@ def user_menu(uname, user_name): # oof thats a little confusing isnt it
         elif n == 4:
             os.system('cls')
             show_collections(uname)
+            input('Press Enter to return...')
         else:
             os.system('cls')
 
@@ -252,19 +262,24 @@ def add_tool(uname):
     # Gotta make sure barcodes are not reused
     valid_barcode = False
     while not valid_barcode:
-        barcode = int(input('Enter tool barcode : '))
 
-        if len(all_barcodes) == 0:
-            valid_barcode = True
+        try:
+            barcode = int(input('Enter tool barcode : '))
 
-        for bc in all_barcodes:
-            # print(bc[0])
-            if bc[0] == barcode:
-                print('That barcode already exists!')
-                valid_barcode = False
-                break
-            else:
+            if len(all_barcodes) == 0:
                 valid_barcode = True
+
+            for bc in all_barcodes:
+                # print(bc[0])
+                if bc[0] == barcode:
+                    print('That barcode already exists!')
+                    valid_barcode = False
+                    break
+                else:
+                    valid_barcode = True
+        except ValueError:
+            print('Barcode must be numeric...')
+            pass
 
     name = input('Enter tool name : ').strip()
     lendable_in = input('Is the tool lendable? (y/n): ')
@@ -317,7 +332,7 @@ def add_tool(uname):
 
     if uname != '':  # you can use the function to add non-owned tools :)
 
-        buy_date = datetime.datetime.now()
+        buy_date = datetime.now()
 
         sql = '''
         INSERT INTO "owns" ("username", "barcode", "buy_date")
@@ -376,11 +391,23 @@ def show_collections(uname):
     global conn
     cursor = conn.cursor()
 
-    # Get a list of all collections
-    sql = '''
-    SELECT "coll_name" FROM "collection"
-    '''
-    cursor.execute(sql)
+    if uname == None:
+        # Get a list of all collections
+        sql = '''
+        SELECT "coll_name" FROM "collection"
+        '''
+    else:
+        #only show collections where a user has a tool in it
+        sql = '''
+        SELECT "coll_name" FROM "collection"
+        WHERE "coll_name" IN (
+            SELECT "collection" FROM "owns"
+            WHERE "username" = %s
+            AND "sold_date" IS NULL
+            AND "rem_coll_date" IS NULL
+        );
+        '''
+    cursor.execute(sql, (uname,))
     all_colls = cursor.fetchall()
 
     print(' -- Existing Collections are -- ')
@@ -388,28 +415,27 @@ def show_collections(uname):
     new_coll = True
     for coll in all_colls:
         coll_list.append(coll[0])
-    print(tabulate(coll_list, headers=['COLLECTION NAME']))
+    print(tabulate(all_colls, headers=['COLLECTION NAME']))
     print(' -- -- ')
 
-def show_tools_in_coll(uname):
+    return coll_list
+
+def get_tools_in_coll(uname, coll_name):
+    # must be a valid coll_name
     global conn
     cursor = conn.cursor()
 
-    show_collections(uname)
-
-    coll_name = input('Enter the collection name to see tools in it : ').strip()
-
     sql = '''
-    SELECT "username", "barcode" FROM "owns"
-    WHERE "collection" = %s
+    SELECT "barcode" FROM "owns"
+    WHERE "collection" = %s AND "rem_coll_date" IS NULL
     '''
-    cursor.execute(sql, (collection,))
+    cursor.execute(sql, (coll_name,))
 
     coll_tools = cursor.fetchall()
 
-    print(coll_tools)
+    tool_list = [tool[0] for tool in coll_tools]
 
-
+    return tool_list
 
 
 
@@ -453,36 +479,42 @@ def show_tool_edit():
     print(' 0. Back')
     print(' 1. Change Name')
     print(' 2. Lend Tool')
-    print(' 3. Add to Collection')
+    print(' 3. Add/Romove from Collection')
     print(' 4. Add to Category')
     print(' 5. Sell')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
 def tool_edit(uname, barcode, tool_name, lendable):
-    os.system('cls')
-    print('Editing:', tool_name)
-    show_tool_edit()
-    n = int(input('Enter option : '))
-    if n == 0:
+    while True:
+
         os.system('cls')
-    elif n == 1:  # change name
-        os.system('cls')
-        change_name(uname, barcode, tool_name)
-    elif n == 2:  # Lend
-        os.system('cls')
-        lend(uname, barcode, tool_name, lendable)
-    elif n == 3:  # add to collection
-        os.system('cls')
-        add_to_collection(uname, barcode, tool_name)
-    elif n == 4:  # add to category
-        os.system('cls')
-        add_to_category(uname, barcode, tool_name)
-    elif n == 5:  # sell
-        os.system('cls')
-        sell(uname, barcode, tool_name)
-    else:
-        os.system('cls')
+        print('Editing:', tool_name)
+        show_tool_edit()
+        try:
+            n = int(input('Enter option : '))
+        except ValueError:
+            n = -1
+        if n == 0:
+            os.system('cls')
+            break
+        elif n == 1:  # change name
+            os.system('cls')
+            change_name(uname, barcode, tool_name)
+        elif n == 2:  # Lend
+            os.system('cls')
+            lend(uname, barcode, tool_name, lendable)
+        elif n == 3:  # add to collection
+            os.system('cls')
+            add_to_collection(uname, barcode, tool_name)
+        elif n == 4:  # add to category
+            os.system('cls')
+            add_to_category(uname, barcode, tool_name)
+        elif n == 5:  # sell
+            os.system('cls')
+            sell(uname, barcode, tool_name)
+        else:
+            os.system('cls')
 
 
 def change_name(uname, barcode, tool_name):
@@ -506,13 +538,19 @@ def change_name(uname, barcode, tool_name):
 
 
 def lend(uname, barcode, tool_name, lendable):
+    global conn
+    cursor = conn.cursor()
 
     if not lendable:
         print(tool_name, 'is not marked as lendable, would you like to change this and lend anyways?')
         force_lend = input('\n(y/n): ')
         if force_lend[0] == 'y':
-            pass
-            # make_lendable(barcode)
+            sql = '''
+            UPDATE "tool"
+            SET "lendable" = 'true'
+            WHERE "barcode" = %s
+            '''
+            cursor.execute(sql, (barcode,))
         else:
             return
 
@@ -528,15 +566,49 @@ def lend(uname, barcode, tool_name, lendable):
         else:
             print('That is not a valid username, try again...\n')
 
+    #time to actually lend
+
+    while True:
+        try:
+            lend_time = int(input('How long are you lending it (in days) : '))
+            if lend_time > 0:
+                break
+        except ValueError:
+            print('Enter a number more than 0...')
+
+    start_date = datetime.now()
+    due_date = start_date + timedelta(days=lend_time)
+
+    sql = '''
+    INSERT INTO "borrows" ("username", "barcode", "start_date", "due_date")
+    VALUES (%s, %s, %s, %s)
+    '''
+    cursor.execute(sql, (borrow_uname, barcode, start_date, due_date))
+
+    conn.commit()
+    print('...Successfully Lent')
+    sleep(.7)
+    cursor.close()
+
+
 
 def add_to_collection(uname, barcode, tool_name):
+    # if you specify a collection the tool is in already it will remove it from that collection
     global conn
     cursor = conn.cursor()
 
-    collection = input('\nEnter collection name\nIf that collection does not exist it will be made : ').strip()
+    coll_list = show_collections(uname)
 
+    collection = input('\nEnter collection name to add or remove the tool from...\nIf that collection does not exist it will be made : ').strip().lower()
+
+    new_coll = True
+    remove_from_coll = False
     if collection in coll_list:
         new_coll = False
+        # see if we are adding or removing from the collection
+        tool_list = get_tools_in_coll(uname, collection):
+        if barcode in tool_list:
+            remove_from_coll = True
 
     if new_coll:
         # add in new collection
@@ -546,13 +618,22 @@ def add_to_collection(uname, barcode, tool_name):
         '''
         cursor.execute(sql, (collection,))
 
-    # add in collection relation
-    sql = '''
-    UPDATE "owns"
-    SET "collection" = %s
-    WHERE "user_id" = %s AND "barcode" = %s;
-    '''
-    cursor.execute(sql, (collection, usr_id, barcode))
+    if remove_from_coll:
+        sql='''
+        UPDATE "owns"
+        SET "rem_coll_date" = %s
+        WHERE "username" = %s AND "barcode" = %s;
+        '''
+        cursor.execute(sql, (datetime.now(), uname, barcode))
+    else:
+        # add in collection relation
+        sql = '''
+        UPDATE "owns"
+        SET "collection" = %s, "rem_coll_date" = NULL
+        WHERE "username" = %s AND "barcode" = %s;
+        '''
+        cursor.execute(sql, (collection, uname, barcode))
+
     conn.commit()
     print('...Successfully Added')
     sleep(.7)
@@ -605,8 +686,44 @@ def add_to_category(uname, barcode, tool_name):
 
 
 def sell(uname, barcode, tool_name):
-    # TODO: Write the function
-    pass
+    global conn
+    cursor = conn.cursor()
+
+    uname_list, f_name_list, l_name_list = show_all_users(uname)
+
+    correct_uname = False
+
+    while not correct_uname:
+        sell_uname = input('Enter the username of the user to sell to : ').strip()
+
+        if sell_uname in uname_list:
+            correct_uname = True
+        else:
+            print('That is not a valid username, try again...\n')
+
+    # Update tool as sold
+    sql='''
+    UPDATE "owns"
+    SET "sold_date" = %s
+    WHERE "username" = %s AND "barcode" = %s;
+    '''
+    cursor.execute(sql, (datetime.now(), uname, barcode))
+    # make the new owner
+    buy_date = datetime.now()
+    sql = '''
+    INSERT INTO "owns" ("username", "barcode", "buy_date")
+    VALUES (%s, %s, %s)
+    '''
+    cursor.execute(sql, (sell_uname, barcode, buy_date))
+
+    conn.commit()
+    print('...Successfully Sold')
+    sleep(.7)
+    cursor.close()
+
+
+
+
 
 ###############################################################################
 #                         OLD FUNCTIONS / DEBUGGING
