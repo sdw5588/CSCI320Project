@@ -16,19 +16,18 @@ def main():
 
     # you need to make a file called creds.txt with the username on the first line and password on the next one
     f = open("creds.txt", "r")
-    usr = f.readline().rstrip()
-    passwd = f.readline().rstrip()
+    usr = f.readline().strip()
+    passwd = f.readline().strip()
     # print("dbname="+ usr + " user= " + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu", sep = "")
 
-    conn = psycopg2.connect("dbname=" + usr + " user= " + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu")
+    conn = psycopg2.connect("dbname=" + usr + " user=" + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu")
     print("Connected with " + conn.dsn)
     os.system('cls')
 
     # now we can start the PythonAPP
 
     # addTest(conn, random.randint(100, 1000), 'This was done by a robot', 'PythonAPP', True)
-    # getFromTable()
-    lend(999, 91, "2", True)
+    #get_user_name()
 
     start()
 
@@ -70,13 +69,14 @@ def start():
         elif n == 2:
             os.system('cls')
             get_user_name()
-        # Browse tools
-        elif n == 1:
+        # Browse tools by: all / category / collection
+        elif n == 3:
             os.system('cls')
         # List Users
-        elif n == 2:
+        elif n == 4:
             os.system('cls')
             show_all_users(None)  # if an id is specified it shows all but that id
+            input('Press Enter to continue...')
         else:
             os.system('cls')
 
@@ -85,79 +85,79 @@ def register_user():
     global conn
     cursor = conn.cursor()
 
-    # Get a lits of all user ids
+    # Get a lits of all usernames
     sql = '''
-    SELECT "id" FROM "user"
+    SELECT "username" FROM "user"
     '''
     cursor.execute(sql)
-    all_uid = cursor.fetchall()
+    all_uname = cursor.fetchall()
+    # Gotta make sure unames arent reused
+    valid_uname = False
 
-    '''
-    # Gotta make sure uids arent reused
-    valid_uid = False
-    while not valid_uid:
-        usr_id = int(input('Enter user id : '))
+    while not valid_uname:
+        usr_name = input('Enter username : ').strip()
 
-        for uid in all_uid:
+        if len(all_uname) == 0:
+            valid_uname = True
+
+        for uname in all_uname:
             # print(uid[0])
-            if uid[0] == usr_id:
-                print('That user_id already exists!')
+            if uname[0] == usr_name:
+                print('That username already exists!')
                 break
             else:
-                valid_uid = True
+                valid_uname = True
 
-    '''
-
-    f_name = input('Enter user first_name : ')
-    l_name = input('Enter user last_name : ')
+    f_name = input('Enter user first_name : ').strip()
+    l_name = input('Enter user last_name : ').strip()
 
     sql = '''
-    INSERT INTO "user" ("first_name", "last_name")
-    VALUES (%s, %s)
+    INSERT INTO "user" ("username", "first_name", "last_name")
+    VALUES (%s, %s, %s)
     '''
-    cursor.execute(sql, (f_name, l_name))
+    cursor.execute(sql, (usr_name, f_name, l_name))
     conn.commit()
     print("...User added successfully!")
     sleep(.7)
     cursor.close()
 
 
-def show_all_users(usr_id):
+def show_all_users(uname):
     global conn
     cursor = conn.cursor()
 
-    if usr_id is None:
+    if uname is None:
         # Get a list of all users
         sql = '''
-        SELECT "id", "first_name", "last_name" FROM "user"
+        SELECT "username", "first_name", "last_name" FROM "user"
         '''
     else:
-        # Get a list of all users but the id
+        # Get a list of all users but the uname given
         sql = '''
-        SELECT "id", "first_name", "last_name" FROM "user"
-        WHERE "id" != %s
+        SELECT "username", "first_name", "last_name" FROM "user"
+        WHERE "username" != %s
         '''
 
-    cursor.execute(sql, (usr_id,))
+    cursor.execute(sql, (uname,))
     all_users = cursor.fetchall()
 
     print(' -- -- Users -- -- ')
     # print('--ID--', '-FIRST-', '-LAST-', sep='\t')
-    id_list = []
+    uname_list = []
     f_name_list = []
     l_name_list = []
     i = 0
     for user in all_users:
-        id_list.append(user[0])
+        uname_list.append(user[0])
         f_name_list.append(user[1])
         l_name_list.append(user[2])
         # print(id_list[i], fname_list[i], lname_list[i], sep='\t')
         i += 1
 
-    print(tabulate(all_users, headers=['ID', 'FIRST', 'LAST']))
+    print(tabulate(all_users, headers=['USRNAME', 'FIRST', 'LAST']))
     print(' -- -- ')
 
-    return id_list, f_name_list, l_name_list
+    return uname_list, f_name_list, l_name_list
 
 ###############################################################################
 #                         USER MENU
@@ -166,27 +166,32 @@ def show_all_users(usr_id):
 
 def get_user_name():
 
-    show_all_users(None)
+    uname_list, f_name_list, l_name_list = show_all_users(None)
 
     while True:
         global conn
         cursor = conn.cursor()
 
-        usr_id = input('Enter your user id : ')
+        usr_name = input('Enter your username : ')
+
+        print(usr_name)
+        print(uname_list)
 
         sql = '''
         SELECT "first_name", "last_name" FROM "user"
-        WHERE "id"=%s;
+        WHERE "username"=%s;
         '''
-        cursor.execute(sql, (usr_id,))
+        cursor.execute(sql, (usr_name,))
         name = cursor.fetchall()
+
+        print(name)
 
         if len(name) == 1:
             cursor.close()
-            user_menu(usr_id, name[0])
+            user_menu(usr_name, name[0])
             return
         else:
-            print('Please enter a valid user_id')
+            print('Please enter a valid username')
 
 
 def show_user_menu():
@@ -199,12 +204,15 @@ def show_user_menu():
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
-def user_menu(usr_id, user_name):
+def user_menu(uname, user_name): # oof thats a little confusing isnt it
     while True:
         os.system('cls')
         print('Hello,', user_name[0])
         show_user_menu()
-        n = int(input('Enter option : '))
+        try:
+            n = int(input('Enter option : '))
+        except ValueError:
+            n = -1
         # exit
         if n == 0:
             os.system('cls')
@@ -212,25 +220,25 @@ def user_menu(usr_id, user_name):
         # add tool
         elif n == 1:
             os.system('cls')
-            add_tool(usr_id)
+            add_tool(uname)
         # edit tool
         elif n == 2:
             os.system('cls')
-            edit_tool(usr_id)
+            edit_tool(uname)
         # View my Tools
         elif n == 3:
             os.system('cls')
-            view_tools(usr_id)
+            view_tools(uname)
             input('Press Enter to return...')
         # View my collections
         elif n == 4:
             os.system('cls')
-            show_collections(user_id)
+            show_collections(uname)
         else:
             os.system('cls')
 
 
-def add_tool(usr_id):
+def add_tool(uname):
     global conn
     cursor = conn.cursor()
 
@@ -246,6 +254,9 @@ def add_tool(usr_id):
     while not valid_barcode:
         barcode = int(input('Enter tool barcode : '))
 
+        if len(all_barcodes) == 0:
+            valid_barcode = True
+
         for bc in all_barcodes:
             # print(bc[0])
             if bc[0] == barcode:
@@ -255,7 +266,7 @@ def add_tool(usr_id):
             else:
                 valid_barcode = True
 
-    name = input('Enter tool name : ')
+    name = input('Enter tool name : ').strip()
     lendable_in = input('Is the tool lendable? (y/n): ')
     if lendable_in == "n":
         lendable = False
@@ -277,7 +288,7 @@ def add_tool(usr_id):
         print(cat[0])
     print(' -- -- ')
 
-    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ')
+    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ').strip().lower()
 
     if category in cat_list:
         new_cat = False
@@ -304,15 +315,15 @@ def add_tool(usr_id):
     '''
     cursor.execute(sql, (category, barcode))
 
-    if usr_id != '':  # you can use the function to add non-owned tools :)
+    if uname != '':  # you can use the function to add non-owned tools :)
 
         buy_date = datetime.datetime.now()
 
         sql = '''
-        INSERT INTO "owns" ("user_id", "barcode", "buy_date")
+        INSERT INTO "owns" ("username", "barcode", "buy_date")
         VALUES (%s, %s, %s)
         '''
-        cursor.execute(sql, (usr_id, barcode, buy_date))
+        cursor.execute(sql, (uname, barcode, buy_date))
 
     conn.commit()
     cursor.close()
@@ -325,24 +336,27 @@ def view_tools(usr_id):
     global conn
     cursor = conn.cursor()
 
-    if usr_id is None:
+    if usr_id is None: # does not work yet
         # Show all tools
         sql = '''
-        SELECT "barcode", "name", "lendable" FROM "tool"
+        SELECT "username", "barcode", "name", "lendable" FROM "tool"
         '''
+        print(' -- -- ALL TOOLS -- -- ')
     else:
         # Get a list of the User's Owned Tools
         sql = '''
         SELECT "barcode", "name", "lendable" FROM "tool"
         WHERE "barcode" IN (
             SELECT "barcode" FROM "owns"
-            WHERE "user_id" = %s AND "sold_date" IS NULL
+            WHERE "username" = %s AND "sold_date" IS NULL
         );
         '''
+        print(' -- -- YOUR TOOLS -- -- ')
+
     cursor.execute(sql, (usr_id,))
     tools = cursor.fetchall()
+
     # Print out the users tools
-    print(' -- -- YOUR TOOLS -- -- ')
     barcodes = []  # their barcodes
     tool_names = []
     lend_list = []
@@ -358,7 +372,7 @@ def view_tools(usr_id):
 
     return barcodes, tool_names, lend_list
 
-def show_collections(user_id):
+def show_collections(uname):
     global conn
     cursor = conn.cursor()
 
@@ -374,19 +388,26 @@ def show_collections(user_id):
     new_coll = True
     for coll in all_colls:
         coll_list.append(coll[0])
-    print(tabulate(coll_list, headers=['COLLECTION']))
+    print(tabulate(coll_list, headers=['COLLECTION NAME']))
     print(' -- -- ')
 
-def show_tools_in_coll(user_id):
+def show_tools_in_coll(uname):
     global conn
     cursor = conn.cursor()
 
-    coll_name = input('Enter the collection name to see tools in it : ')
+    show_collections(uname)
+
+    coll_name = input('Enter the collection name to see tools in it : ').strip()
 
     sql = '''
-    SELECT "barcode", "name" FROM
+    SELECT "username", "barcode" FROM "owns"
+    WHERE "collection" = %s
     '''
-    cursor.execute(sql, (collection, usr_id, barcode))
+    cursor.execute(sql, (collection,))
+
+    coll_tools = cursor.fetchall()
+
+    print(coll_tools)
 
 
 
@@ -399,14 +420,14 @@ def show_tools_in_coll(user_id):
 ###############################################################################
 
 
-def edit_tool(usr_id):
+def edit_tool(uname):
     global conn
 
     cursor = conn.cursor()
 
     selected_tool = False
 
-    barcodes, tool_names, lend_list = view_tools(usr_id)
+    barcodes, tool_names, lend_list = view_tools(uname)
 
     while not selected_tool:
 
@@ -416,10 +437,11 @@ def edit_tool(usr_id):
             barcode = ''
             print('Please enter a number...')
 
+
         if barcode in barcodes:
             # Its actually their tool
             cursor.close()
-            tool_edit(usr_id, barcode, tool_names[barcodes.index(barcode)], lend_list[barcodes.index(barcode)])
+            tool_edit(uname, barcode, tool_names[barcodes.index(barcode)], lend_list[barcodes.index(barcode)])
             selected_tool = True
         else:
             # not their tool
@@ -437,7 +459,7 @@ def show_tool_edit():
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
-def tool_edit(usr_id, barcode, tool_name, lendable):
+def tool_edit(uname, barcode, tool_name, lendable):
     os.system('cls')
     print('Editing:', tool_name)
     show_tool_edit()
@@ -446,28 +468,28 @@ def tool_edit(usr_id, barcode, tool_name, lendable):
         os.system('cls')
     elif n == 1:  # change name
         os.system('cls')
-        change_name(usr_id, barcode, tool_name)
+        change_name(uname, barcode, tool_name)
     elif n == 2:  # Lend
         os.system('cls')
-        lend(usr_id, barcode, tool_name, lendable)
+        lend(uname, barcode, tool_name, lendable)
     elif n == 3:  # add to collection
         os.system('cls')
-        add_to_collection(usr_id, barcode, tool_name)
+        add_to_collection(uname, barcode, tool_name)
     elif n == 4:  # add to category
         os.system('cls')
-        add_to_category(usr_id, barcode, tool_name)
+        add_to_category(uname, barcode, tool_name)
     elif n == 5:  # sell
         os.system('cls')
-        sell(usr_id, barcode, tool_name)
+        sell(uname, barcode, tool_name)
     else:
         os.system('cls')
 
 
-def change_name(usr_id, barcode, tool_name):
+def change_name(uname, barcode, tool_name):
     global conn
     cursor = conn.cursor()
 
-    new_name = input('Whats the new name for ' + tool_name + " : ")
+    new_name = input('Whats the new name for ' + tool_name + ' : ')
 
     sql = '''
     UPDATE "tool"
@@ -483,7 +505,7 @@ def change_name(usr_id, barcode, tool_name):
     cursor.close()
 
 
-def lend(usr_id, barcode, tool_name, lendable):
+def lend(uname, barcode, tool_name, lendable):
 
     if not lendable:
         print(tool_name, 'is not marked as lendable, would you like to change this and lend anyways?')
@@ -494,24 +516,24 @@ def lend(usr_id, barcode, tool_name, lendable):
         else:
             return
 
-    id_list, f_name_list, l_name_list = show_all_users(usr_id)
+    uname_list, f_name_list, l_name_list = show_all_users(uname)
 
-    correct_id = False
+    correct_uname = False
 
-    while not correct_id:
-        borrow_id = input('Enter the id of the user to lend to : ')
+    while not correct_uname:
+        borrow_uname = input('Enter the username of the user to lend to : ').strip()
 
-        if borrow_id in id_list:
-            correct_id = True
+        if borrow_uname in uname_list:
+            correct_uname = True
         else:
-            print('That is not a valid ID, try again...\n')
+            print('That is not a valid username, try again...\n')
 
 
-def add_to_collection(usr_id, barcode, tool_name):
+def add_to_collection(uname, barcode, tool_name):
     global conn
     cursor = conn.cursor()
 
-    collection = input('\nEnter collection name\nIf that collection does not exist it will be made : ')
+    collection = input('\nEnter collection name\nIf that collection does not exist it will be made : ').strip()
 
     if collection in coll_list:
         new_coll = False
@@ -537,12 +559,12 @@ def add_to_collection(usr_id, barcode, tool_name):
     cursor.close()
 
 
-def add_to_category(usr_id, barcode, tool_name):
+def add_to_category(uname, barcode, tool_name):
     global conn
     cursor = conn.cursor()
 
     # Get a list of all categories
-    # Also this is a copy of code in the Add tool func, because idk how to not do that
+    # Also this is a copy of code in the Add tool func, because i dont want to write a function to do it
     sql = '''
     SELECT "cat_name" FROM "category"
     '''
@@ -557,7 +579,7 @@ def add_to_category(usr_id, barcode, tool_name):
         print(cat[0])
     print(' -- -- ')
 
-    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ')
+    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ').strip()
 
     if category in cat_list:
         new_cat = False
@@ -582,7 +604,7 @@ def add_to_category(usr_id, barcode, tool_name):
     cursor.close()
 
 
-def sell(id, barcode, tool_name):
+def sell(uname, barcode, tool_name):
     # TODO: Write the function
     pass
 
@@ -596,7 +618,7 @@ def add_test(conn, id, info, owner, rented):
     cur = conn.cursor()
 
     cur.execute("""
-    INSERT INTO "TestTable" ("id", "Information", "Owner", "Rented")
+    INSERT INTO "TestTable" ("username", "Information", "Owner", "Rented")
     VALUES (%s, %s, %s, %s)
     """, (id, info, owner, rented))
 
