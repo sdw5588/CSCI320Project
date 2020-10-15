@@ -27,11 +27,6 @@ def main():
     # now we can start the PythonAPP
 
     # addTest(conn, random.randint(100, 1000), 'This was done by a robot', 'PythonAPP', True)
-    #get_user_name()
-    #lend('maga', 78, 'putter', False)
-    get_tools_in_coll('uname', 'golf bag')
-    input(">")
-
     start()
 
     conn.close()
@@ -164,9 +159,94 @@ def show_all_users(uname):
     return uname_list, f_name_list, l_name_list
 
 def browse_tools():
-    pass
-    ## TODO: write function to browse by: all / category / collection
+    while True:
+        os.system('cls')
+        print(' -- -- -- ALL TOOL MENU -- -- -- ')
+        print(' 0. Exit')
+        print(' 1. View By Category')
+        print(' 2. View By Collection')
+        print(' 3. View All Tools')
+        print(' -- -- -- -- -- -- -- -- -- -- ')
 
+        try:
+            n = int(input('Enter option : '))
+        except ValueError:
+            n = 0
+        if n == 0:
+            return
+        elif n == 1:
+            #by cat
+            tools_by_cat()
+        elif n == 2:
+            #by coll
+            tools_by_coll()
+        elif n == 3:
+            #all
+            print_tool_table(view_tools(None)[0])
+
+def print_tool_table(barcodes):
+    os.system('cls')
+    print('Getting Tool MEGA LIST...')
+    table  = [get_tool_details(barcode) for barcode in barcodes]
+    os.system('cls')
+    print(tabulate(table, headers=['NAME', 'LENDABLE', 'OWNER', 'COLLECTION', 'CATEGORIES']))
+    input(' -- -- \nPress Enter to continue...')
+
+
+def tools_by_cat():
+    os.system('cls')
+    global conn
+    cursor = conn.cursor()
+    # Get a list of all categories
+    sql = '''
+    SELECT "cat_name" FROM "category"
+    '''
+    cursor.execute(sql)
+    all_cats = cursor.fetchall()  # look at this cat --> (,,,)=(^..^)=(,,,)
+
+    print(' -- Existing Categories are -- ')
+    cat_list = []
+    new_cat = True
+    for cat in all_cats:
+        cat_list.append(cat[0])
+        print(cat[0])
+    print(' -- -- ')
+
+    valid_choice = False
+    while not valid_choice:
+        category = input('\nEnter cat_name : ').strip().lower()
+
+        if category in cat_list:
+            valid_choice = True
+        else:
+            print('Thats not a valid category, try again...')
+
+    sql='''
+    SELECT "barcode" from "is_in"
+    WHERE "cat_name"=%s
+    '''
+    cursor.execute(sql, (category,))
+    all_barcodes = cursor.fetchall()
+    barcodes = [barcode[0] for barcode in all_barcodes]
+    print_tool_table(barcodes)
+
+
+def tools_by_coll():
+    os.system('cls')
+    coll_list = show_collections(None)
+
+    valid_choice = False
+    while not valid_choice:
+        collection = input('What Collection do you want to look in? : ').strip().lower()
+
+        if collection in coll_list:
+            valid_choice = True
+        else:
+            print('That collection does not exist. Please enter a valid collection...')
+
+    bc_list = get_tools_in_coll(None, collection)
+
+    print_tool_table(bc_list)
 
 ###############################################################################
 #                         USER MENU
@@ -242,8 +322,7 @@ def user_menu(uname, user_name): # oof thats a little confusing isnt it
         # View my collections
         elif n == 4:
             os.system('cls')
-            show_collections(uname)
-            input('Press Enter to return...')
+            view_collections(uname)
         else:
             os.system('cls')
 
@@ -354,8 +433,10 @@ def view_tools(usr_id):
     if usr_id is None: # does not work yet
         # Show all tools
         sql = '''
-        SELECT "username", "barcode", "name", "lendable" FROM "tool"
+        SELECT "barcode", "name", "lendable" FROM "tool"
         '''
+        cursor.execute(sql, (usr_id,))
+        tools = cursor.fetchall()
         print(' -- -- ALL TOOLS -- -- ')
     else:
         # Get a list of the User's Owned Tools
@@ -420,24 +501,90 @@ def show_collections(uname):
 
     return coll_list
 
+def view_collections(uname):
+
+    coll_list = show_collections(uname)
+
+    valid_choice = False
+    while not valid_choice:
+        collection = input('What Collection do you want to look in? : ').strip().lower()
+
+        if collection in coll_list:
+            valid_choice = True
+        else:
+            print('That collection does not exist. Please enter a valid collection...')
+
+    bc_list = get_tools_in_coll(uname, collection)
+
+    table = [(bc_list[i], get_tool_details(bc_list[i])[0]) for i in range(len(bc_list))]
+
+    print(tabulate(table, headers=['BARCODE', 'NAME']))
+
+    input('Press Enter to return...')
+
+def get_tool_details(barcode):
+    # returns (name, lendable, username, collection, categories)
+    global conn
+    cursor = conn.cursor()
+
+    #get name and lendable
+    sql='''
+    SELECT "name", "lendable" from "tool"
+    WHERE "barcode"=%s
+    '''
+    cursor.execute(sql, (barcode,))
+    data = cursor.fetchall()
+    name = data[0][0]
+    lendable = data[0][1]
+
+    #get owner & collection
+    sql='''
+    SELECT "username", "collection" from "owns"
+    WHERE "barcode"=%s
+    AND "sold_date" IS NULL
+    AND "rem_coll_date" IS NULL
+    '''
+    cursor.execute(sql, (barcode,))
+    data = cursor.fetchall()
+    username = data[0][0]
+    collection = data[0][1]
+
+    #get categories
+    sql='''
+    SELECT "cat_name" from "is_in"
+    WHERE "barcode"=%s
+    '''
+    cursor.execute(sql, (barcode,))
+    data = cursor.fetchall()
+    categories = data
+
+    return (name, lendable, username, collection, categories)
+
 def get_tools_in_coll(uname, coll_name):
     # must be a valid coll_name
     global conn
     cursor = conn.cursor()
 
-    sql = '''
-    SELECT "barcode" FROM "owns"
-    WHERE "collection" = %s AND "rem_coll_date" IS NULL
-    '''
-    cursor.execute(sql, (coll_name,))
+    if uname == None:
+        sql = '''
+        SELECT "barcode" FROM "owns"
+        WHERE "collection" = %s AND "rem_coll_date" IS NULL
+        '''
+        cursor.execute(sql, (coll_name,))
+    else:
+        sql = '''
+        SELECT "barcode" FROM "owns"
+        WHERE "collection" = %s
+        AND "rem_coll_date" IS NULL
+        AND "username" = %s
+        '''
+        cursor.execute(sql, (coll_name, uname))
 
     coll_tools = cursor.fetchall()
 
-    tool_list = [tool[0] for tool in coll_tools]
+    bc_list = [tool[0] for tool in coll_tools]
 
-    return tool_list
-
-
+    return bc_list
 
 
 
@@ -606,8 +753,8 @@ def add_to_collection(uname, barcode, tool_name):
     if collection in coll_list:
         new_coll = False
         # see if we are adding or removing from the collection
-        tool_list = get_tools_in_coll(uname, collection):
-        if barcode in tool_list:
+        bc_list = get_tools_in_coll(uname, collection)
+        if barcode in bc_list:
             remove_from_coll = True
 
     if new_coll:
@@ -660,7 +807,7 @@ def add_to_category(uname, barcode, tool_name):
         print(cat[0])
     print(' -- -- ')
 
-    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ').strip()
+    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ').strip().lower()
 
     if category in cat_list:
         new_cat = False
