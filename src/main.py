@@ -106,8 +106,9 @@ def register_user():
                 print('That username already exists!')
                 valid_uname = False
                 break
-
-    f_name = input('Enter user first_name : ').strip()
+    f_name = ''
+    while len(f_name) == 0:
+        f_name = input('Enter user first_name : ').strip()
     l_name = input('Enter user last_name : ').strip()
 
     sql = '''
@@ -158,6 +159,7 @@ def show_all_users(uname):
 
     return uname_list, f_name_list, l_name_list
 
+
 def browse_tools():
     while True:
         os.system('cls')
@@ -183,6 +185,7 @@ def browse_tools():
         elif n == 3:
             #all
             print_tool_table(view_tools(None)[0])
+
 
 def print_tool_table(barcodes):
     os.system('cls')
