@@ -365,7 +365,7 @@ def add_tool(uname):
     name = ''
     while len(name) == 0:
         name = input('Enter tool name : ').strip()
-    lendable_in = input('Is the tool lendable? (y/n): ')
+        lendable_in = input('Is the tool lendable? (y/n): ')
     if lendable_in == "n":
         lendable = False
     else:
@@ -386,7 +386,9 @@ def add_tool(uname):
         print(cat[0])
     print(' -- -- ')
 
-    category = input('\nEnter cat_name\nIf that category does not exist it will be made : ').strip().lower()
+    category = ''
+    while len(category) == 0:
+        category = input('\nEnter cat_name\nIf that category does not exist it will be made : ').strip().lower()
 
     if category in cat_list:
         new_cat = False
