@@ -96,16 +96,14 @@ def register_user():
     while not valid_uname:
         usr_name = input('Enter username : ').strip()
 
-        if len(all_uname) == 0:
-            valid_uname = True
+        valid_uname = True
 
         for uname in all_uname:
             # print(uid[0])
             if uname[0] == usr_name:
                 print('That username already exists!')
+                valid_uname = False
                 break
-            else:
-                valid_uname = True
 
     f_name = input('Enter user first_name : ').strip()
     l_name = input('Enter user last_name : ').strip()
@@ -468,6 +466,7 @@ def view_tools(usr_id):
 
     return barcodes, tool_names, lend_list
 
+
 def show_collections(uname):
     global conn
     cursor = conn.cursor()
@@ -501,6 +500,7 @@ def show_collections(uname):
 
     return coll_list
 
+
 def view_collections(uname):
 
     coll_list = show_collections(uname)
@@ -521,6 +521,7 @@ def view_collections(uname):
     print(tabulate(table, headers=['BARCODE', 'NAME']))
 
     input('Press Enter to return...')
+
 
 def get_tool_details(barcode):
     # returns (name, lendable, username, collection, categories)
