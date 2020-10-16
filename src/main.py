@@ -510,6 +510,9 @@ def view_collections(uname):
 
     coll_list = show_collections(uname)
 
+    if len(coll_list) == 0:
+        print('You don\'t have your tools in any collection!')
+        return
     valid_choice = False
     while not valid_choice:
         collection = input('What Collection do you want to look in? : ').strip().lower()
