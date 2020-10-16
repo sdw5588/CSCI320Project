@@ -362,8 +362,9 @@ def add_tool(uname):
         except ValueError:
             print('Barcode must be numeric...')
             pass
-
-    name = input('Enter tool name : ').strip()
+    name = ''
+    while len(name) == 0:
+        name = input('Enter tool name : ').strip()
     lendable_in = input('Is the tool lendable? (y/n): ')
     if lendable_in == "n":
         lendable = False
