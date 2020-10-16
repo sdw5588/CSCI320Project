@@ -629,20 +629,20 @@ def get_tools_in_coll(uname, coll_name):
     global conn
     cursor = conn.cursor()
 
-    if uname == None:
-        sql = '''
-        SELECT "barcode" FROM "owns"
-        WHERE "collection" = %s AND "rem_coll_date" IS NULL
-        '''
-        cursor.execute(sql, (coll_name,))
-    else:
-        sql = '''
-        SELECT "barcode" FROM "owns"
-        WHERE "collection" = %s
-        AND "rem_coll_date" IS NULL
-        AND "username" = %s
-        '''
-        cursor.execute(sql, (coll_name, uname))
+    #if uname == None:
+    sql = '''
+    SELECT "barcode" FROM "owns"
+    WHERE "collection" = %s AND "rem_coll_date" IS NULL
+    '''
+    cursor.execute(sql, (coll_name,))
+    # else:
+    #     sql = '''
+    #     SELECT "barcode" FROM "owns"
+    #     WHERE "collection" = %s
+    #     AND "rem_coll_date" IS NULL
+    #     AND "username" = %s
+    #     '''
+    #     cursor.execute(sql, (coll_name, uname))
 
     coll_tools = cursor.fetchall()
 
@@ -845,7 +845,10 @@ def add_to_collection(uname, barcode, tool_name):
     global conn
     cursor = conn.cursor()
 
-    coll_list = show_collections(uname)
+    coll_list = show_collections(None)
+    os.system('cls')
+
+    show_collections(uname)
 
     collection = input('\nEnter collection name to add or remove the tool from...\nIf that collection does not exist it will be made : ').strip().lower()
 
