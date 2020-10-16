@@ -292,7 +292,8 @@ def show_user_menu():
     print(' 1. Add Tool')
     print(' 2. Edit Tool')
     print(' 3. View your Tools')
-    print(' 4. View your Collections')
+    print(' 4. View your Borrowed Tools')
+    print(' 5. View your Collections')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
@@ -322,8 +323,13 @@ def user_menu(uname, user_name): # oof thats a little confusing isnt it
             os.system('cls')
             view_tools(uname)
             input('Press Enter to return...')
-        # View my collections
+        # View my borrowed tools
         elif n == 4:
+            os.system('cls')
+            view_borrowed(uname)
+            input('Press Enter to return...')
+        # View my collections
+        elif n == 5:
             os.system('cls')
             view_collections(uname)
         else:
@@ -436,7 +442,7 @@ def view_tools(usr_id):
     global conn
     cursor = conn.cursor()
 
-    if usr_id is None: # does not work yet
+    if usr_id is None: # does work now
         # Show all tools
         sql = '''
         SELECT "barcode", "name", "lendable" FROM "tool"
@@ -532,6 +538,52 @@ def view_collections(uname):
     print(tabulate(table, headers=['BARCODE', 'NAME']))
 
     input('Press Enter to return...')
+
+def get_tool_owner(barcode):
+    global conn
+    cursor = conn.cursor()
+
+    #get owner & collection
+    sql='''
+    SELECT "username" from "owns"
+    WHERE "barcode"=%s
+    AND "sold_date" IS NULL
+    AND "rem_coll_date" IS NULL
+    '''
+    cursor.execute(sql, (barcode,))
+    data = cursor.fetchall()
+    return data[0][0]
+
+def get_tool_name(barcode):
+    global conn
+    cursor = conn.cursor()
+
+    #get owner & collection
+    sql='''
+    SELECT "name" from "tool"
+    WHERE "barcode"=%s
+    '''
+    cursor.execute(sql, (barcode,))
+    data = cursor.fetchall()
+    return data[0][0]
+
+
+def view_borrowed(uname):
+    global conn
+    cursor = conn.cursor()
+
+    sql='''
+    SELECT "barcode", "start_date", "due_date", "returned" FROM "borrows"
+    WHERE "username" = %s
+    '''
+    cursor.execute(sql, (uname,))
+    data = cursor.fetchall()
+    table = [(tool[0], get_tool_name(tool[0]), tool[1], tool[2], tool[3]) for tool in data]
+
+    print(tabulate(table, headers=['BARCODE', 'NAME', 'START', 'DUE', 'RETURNED']))
+
+
+
 
 
 def get_tool_details(barcode):
@@ -641,6 +693,7 @@ def show_tool_edit():
     print(' 3. Add/Remove from Collection')
     print(' 4. Add to Category')
     print(' 5. Sell')
+    print(' 6. Mark tool as returned')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
@@ -673,6 +726,10 @@ def tool_edit(uname, barcode, tool_name, lendable):
             os.system('cls')
             sell(uname, barcode, tool_name)
             break
+        elif n == 6:  # set as returned
+            os.system('cls')
+            set_returned(uname, barcode, tool_name)
+            break
         else:
             os.system('cls')
 
@@ -696,10 +753,41 @@ def change_name(uname, barcode, tool_name):
     sleep(.7)
     cursor.close()
 
+def get_lent_tools(uname):
+    global conn
+    cursor = conn.cursor()
+
+    sql='''
+    SELECT "username", "barcode", "start_date", "due_date", "returned" FROM "borrows"
+    '''
+    cursor.execute(sql, (uname,))
+    lent_tools = cursor.fetchall()
+
+    all_bcs = [tool[1] for tool in lent_tools]
+    lent_list = []
+
+    for i in range(len(all_bcs)):
+        if get_tool_owner(all_bcs[i]) == uname:
+            lent_list.append(lent_tools[i])
+
+    return lent_list
+
+
+
 
 def lend(uname, barcode, tool_name, lendable):
     global conn
     cursor = conn.cursor()
+
+    lent_tools = get_lent_tools(uname)
+    lent_bcs = [tool[1] for tool in lent_tools]
+    returned = [tool[4] for tool in lent_tools]
+
+    if barcode in lent_bcs:
+        if not returned[lent_bcs.index(barcode)]:
+            print('This tool is already lent out, mark it as returned or try a different tool')
+            input('Press Enter to exit...')
+            return
 
     if not lendable:
         print(tool_name, 'is not marked as lendable, would you like to change this and lend anyways?')
@@ -849,6 +937,16 @@ def sell(uname, barcode, tool_name):
     global conn
     cursor = conn.cursor()
 
+    lent_tools = get_lent_tools(uname)
+    lent_bcs = [tool[1] for tool in lent_tools]
+    returned = [tool[4] for tool in lent_tools]
+
+    if barcode in lent_bcs:
+        if not returned[lent_bcs.index(barcode)]:
+            print('This tool is currently lent out, mark it as returned to sell it')
+            input('Press Enter to exit...')
+            return
+
     uname_list, f_name_list, l_name_list = show_all_users(uname)
 
     correct_uname = False
@@ -881,6 +979,36 @@ def sell(uname, barcode, tool_name):
     sleep(.7)
     cursor.close()
 
+
+def set_returned(uname, barcode, tool_name):
+    global conn
+    cursor = conn.cursor()
+
+    lent_tools = get_lent_tools(uname)
+    lent_bcs = [tool[1] for tool in lent_tools]
+    returned = [tool[4] for tool in lent_tools]
+
+    if barcode in lent_bcs:
+        if returned[lent_bcs.index(barcode)]:
+            print('This tool is already returned to you')
+            input('Press Enter to exit...')
+            return
+        else:
+            #mark it as returned
+            sql = '''
+            UPDATE "borrows"
+            SET "returned" = 'true'
+            WHERE "barcode" = %s AND "returned" = 'false'
+            '''
+            cursor.execute(sql, (barcode,))
+            conn.commit()
+            print('...Successfully marked as returned')
+            sleep(.7)
+            cursor.close()
+    else:
+        print('This tool is not lent out')
+        input('Press Enter to exit...')
+        return
 
 
 
