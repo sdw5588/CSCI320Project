@@ -97,7 +97,9 @@ def register_user():
         usr_name = input('Enter username : ').strip()
 
         valid_uname = True
-
+        if len(usr_name) == 0:
+            valid_uname = False
+            continue;
         for uname in all_uname:
             # print(uid[0])
             if uname[0] == usr_name:
