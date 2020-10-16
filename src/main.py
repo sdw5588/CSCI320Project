@@ -626,7 +626,7 @@ def show_tool_edit():
     print(' 0. Back')
     print(' 1. Change Name')
     print(' 2. Lend Tool')
-    print(' 3. Add/Romove from Collection')
+    print(' 3. Add/Remove from Collection')
     print(' 4. Add to Category')
     print(' 5. Sell')
     print(' -- -- -- -- -- -- -- -- -- -- ')
@@ -660,6 +660,7 @@ def tool_edit(uname, barcode, tool_name, lendable):
         elif n == 5:  # sell
             os.system('cls')
             sell(uname, barcode, tool_name)
+            break
         else:
             os.system('cls')
 
