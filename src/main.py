@@ -5,7 +5,8 @@ from time import sleep
 from datetime import datetime, timedelta
 from tabulate import tabulate
 
-#TESTING AGAIN FOR GIT VIA CMD
+# The video for this is in the Phade 3 report and also here:
+# ​https://www.youtube.com/watch?v=Tqb8EXflZdE
 
 NAME = 'PythonAPP'
 conn = object
