@@ -338,7 +338,13 @@ def show_user_menu():
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
-def user_menu(uname, user_name): # oof thats a little confusing isnt it
+def user_menu(uname, user_name):
+    """
+    Gets input from the user on the user menu and execute appropriate command.
+    :param uname: username of user.
+    :param user_name: first name of user.
+    :return: None
+    """
     while True:
         os.system('cls')
         print('Hello,', user_name[0])
@@ -378,6 +384,11 @@ def user_menu(uname, user_name): # oof thats a little confusing isnt it
 
 
 def add_tool(uname):
+    """
+    Add a tool to be owned by a user.
+    :param uname: username of user getting a new tool.
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -480,6 +491,13 @@ def add_tool(uname):
 
 
 def view_tools(usr_id):
+    """
+    View tools of a specific user or all users.
+    :param usr_id: If None, then display all tools. Otherwise, display
+    tools of user with username as usr_id
+    :return: list containing barcode, tool name, and who, if anyone, the tool(s)
+    is currently being lent to.
+    """
     global conn
     cursor = conn.cursor()
 
@@ -523,6 +541,12 @@ def view_tools(usr_id):
 
 
 def show_collections(uname):
+    """
+    Print the collections of the tools of a specific user or all users.
+    :param uname: if None, print for all users. Otherwise, print for user whose
+    username is uname.
+    :return: List of the collections
+    """
     global conn
     cursor = conn.cursor()
 
@@ -580,7 +604,13 @@ def view_collections(uname):
 
     input('Press Enter to return...')
 
+
 def get_tool_owner(barcode):
+    """
+    Get the username of the owner of a tool
+    :param barcode: the tool's barcode.
+    :return: The username of the owner of the tool.
+    """
     global conn
     cursor = conn.cursor()
 
@@ -595,7 +625,13 @@ def get_tool_owner(barcode):
     data = cursor.fetchall()
     return data[0][0]
 
+
 def get_tool_name(barcode):
+    """
+    Get the tool name of a tool.
+    :param barcode: barcode of the tool.
+    :return: tool name of that tool.
+    """
     global conn
     cursor = conn.cursor()
 
@@ -610,6 +646,11 @@ def get_tool_name(barcode):
 
 
 def view_borrowed(uname):
+    """
+    find and print the tools that a user is borrowing or has borrowed.
+    :param uname: username of the user.
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -624,10 +665,14 @@ def view_borrowed(uname):
     print(tabulate(table, headers=['BARCODE', 'NAME', 'START', 'DUE', 'RETURNED']))
 
 
-
-
-
 def get_tool_details(barcode):
+    """
+    Get all the revelant information of a specific tool:
+    its name, whether it's lendable, the username of the owner, and which
+    collections / categories it belongs to.
+    :param barcode: barcode of the tool.
+    :return: List of the information.
+    """
     # returns (name, lendable, username, collection, categories)
     global conn
     cursor = conn.cursor()
@@ -665,7 +710,14 @@ def get_tool_details(barcode):
 
     return (name, lendable, username, collection, categories)
 
+
 def get_tools_in_coll(uname, coll_name):
+    """
+    Get the tools that are owned by a user that are in a specific collection.
+    :param uname: username of the user.
+    :param coll_name: name of the collection.
+    :return: List of the barcodes of the tools.
+    """
     # must be a valid coll_name
     global conn
     cursor = conn.cursor()
@@ -692,13 +744,17 @@ def get_tools_in_coll(uname, coll_name):
     return bc_list
 
 
-
 ###############################################################################
 #                         EDIT TOOL SUB MENU
 ###############################################################################
 
 
 def edit_tool(uname):
+    """
+    Enter the tool editing menu for a specific tool.
+    :param uname: username of the user who's trying to enter.
+    :return: None
+    """
     global conn
 
     cursor = conn.cursor()
@@ -723,10 +779,14 @@ def edit_tool(uname):
             selected_tool = True
         else:
             # not their tool
-            print('You dont own that tool, or it doesnt exist')
+            print('You don\'t own that tool, or it doesn\'t exist')
 
 
 def show_tool_edit():
+    """
+    Display the tool editing menu.
+    :return: None
+    """
     print(' -- -- -- Tool EDITOR -- -- -- ')
     print(' 0. Back')
     print(' 1. Change Name')
