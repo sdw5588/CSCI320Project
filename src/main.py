@@ -13,6 +13,11 @@ conn = object
 
 
 def main():
+    """
+    Looks in creds.txt for username and password and connects to the database.
+    Enters the main loop for the program afterwards.
+    :return:
+    """
     global conn
 
     # you need to make a file called creds.txt with the username on the first line and password on the next one
@@ -39,6 +44,10 @@ def main():
 
 
 def show_main_menu():
+    """
+    Displays the main menu.
+    :return: None
+    """
     print(' -- -- -- -- MAIN MENU -- -- -- -- ')
     print(' 0. Exit')
     print(' 1. Register User')
@@ -49,6 +58,11 @@ def show_main_menu():
 
 
 def start():
+    """
+    Gets input from the user from the main menu and takes appropriate action
+    that input.
+    :return: None
+    """
     while True:
         os.system('cls')
         show_main_menu()
@@ -82,6 +96,11 @@ def start():
 
 
 def register_user():
+    """
+    Registers a new user into the database by getting input for required
+    fields.
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -124,6 +143,11 @@ def register_user():
 
 
 def show_all_users(uname):
+    """
+    Displays one or all users in the database.
+    :param uname: uname of a specific user. If None, then displays all users.
+    :return: the attributes of a specific user or all the users.
+    """
     global conn
     cursor = conn.cursor()
 
@@ -162,6 +186,10 @@ def show_all_users(uname):
 
 
 def browse_tools():
+    """
+    Display the tool menu and executes appropriate command.
+    :return: None
+    """
     while True:
         os.system('cls')
         print(' -- -- -- ALL TOOL MENU -- -- -- ')
@@ -189,6 +217,11 @@ def browse_tools():
 
 
 def print_tool_table(barcodes):
+    """
+    Prints the relevant information for all tools whose barcode is listed.
+    :param barcodes: barcodes of the users whose information to print.
+    :return: None
+    """
     os.system('cls')
     print('Getting Tool MEGA LIST...')
     table  = [get_tool_details(barcode) for barcode in barcodes]
@@ -258,7 +291,10 @@ def tools_by_coll():
 
 
 def get_user_name():
-
+    """
+    Has user enter their username so they can log into their user menu.
+    :return: None
+    """
     uname_list, f_name_list, l_name_list = show_all_users(None)
 
     while True:
@@ -288,6 +324,10 @@ def get_user_name():
 
 
 def show_user_menu():
+    """
+    Display the user menu.
+    :return: None
+    """
     print(' -- -- -- User Menu -- -- -- ')
     print(' 0. Back')
     print(' 1. Add Tool')
