@@ -24,9 +24,9 @@ def main():
     global conn
 
     # you need to make a file called creds.txt with the username on the first line and password on the next one
-    f = open("creds.txt", "r")
-    usr = f.readline().strip()
-    passwd = f.readline().strip()
+    # f = open("creds.txt", "r")
+    usr = "p320_26"
+    passwd = "eewier5eix2ag3ohChoo"
     # print("dbname="+ usr + " user= " + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu", sep = "")
 
     conn = psycopg2.connect("dbname=" + usr + " user=" + usr + " password=" + passwd + " host=reddwarf.cs.rit.edu")
