@@ -1,11 +1,14 @@
+"""
+This program connects to our database and allows for all the necessary interactions.
+Authors: Owen McClure, Shayne Winn, Joseph Saber, Bin Qiu
+"""
 import psycopg2  # pip install psycorg2
-import random
 import os
 from time import sleep
 from datetime import datetime, timedelta
 from tabulate import tabulate
 
-# The video for this is in the Phade 3 report and also here:
+# The video for this is in the Phase 3 report and also here:
 # ​https://www.youtube.com/watch?v=Tqb8EXflZdE
 
 NAME = 'PythonAPP'
@@ -231,6 +234,10 @@ def print_tool_table(barcodes):
 
 
 def tools_by_cat():
+    """
+    Prints the tools in a specific category.
+    :return: None
+    """
     os.system('cls')
     global conn
     cursor = conn.cursor()
@@ -269,6 +276,10 @@ def tools_by_cat():
 
 
 def tools_by_coll():
+    """
+    Print the tools in a specific collection.
+    :return: None
+    """
     os.system('cls')
     coll_list = show_collections(None)
 
@@ -581,7 +592,11 @@ def show_collections(uname):
 
 
 def view_collections(uname):
-
+    """
+    Views the tools owned by a user in a collection
+    :param uname: username of the user
+    :return: None
+    """
     coll_list = show_collections(uname)
 
     if len(coll_list) == 0:
@@ -799,6 +814,14 @@ def show_tool_edit():
 
 
 def tool_edit(uname, barcode, tool_name, lendable):
+    """
+    Gets input from the tool editing menu and executes appropriate command.
+    :param uname: username of the owner of the tool.
+    :param barcode: barcode of the tool.
+    :param tool_name: name of the tool.
+    :param lendable: lendability of the tool.
+    :return: None
+    """
     while True:
 
         os.system('cls')
@@ -836,6 +859,13 @@ def tool_edit(uname, barcode, tool_name, lendable):
 
 
 def change_name(uname, barcode, tool_name):
+    """
+    Change the name of a specific tool.
+    :param uname: username of the owner of the tool.
+    :param barcode: barcode of the tool.
+    :param tool_name: current name of the tool.
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -854,7 +884,14 @@ def change_name(uname, barcode, tool_name):
     sleep(.7)
     cursor.close()
 
+
 def get_lent_tools(uname):
+    """
+    Get the tools lent out from a user.
+    :param uname: username of the user.
+    :return: list containing the username, barcode, start date, end date,
+    and whether it has been returned of all the tools lent out from the user.
+    """
     global conn
     cursor = conn.cursor()
 
@@ -874,9 +911,15 @@ def get_lent_tools(uname):
     return lent_list
 
 
-
-
 def lend(uname, barcode, tool_name, lendable):
+    """
+    Lends a tool to another user.
+    :param uname: username of who is lending the tool
+    :param barcode: barcode of the tool
+    :param tool_name: name of the tool
+    :param lendable: lendability of the tool. User can choose to force a tool to be lent.
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -940,8 +983,14 @@ def lend(uname, barcode, tool_name, lendable):
     cursor.close()
 
 
-
 def add_to_collection(uname, barcode, tool_name):
+    """
+    Add a tool to a collection and create the collection if it doesn't exist yet.
+    :param uname: username of user who owns the tool.
+    :param barcode: barcode of the tool.
+    :param tool_name: name of the tool.
+    :return: None
+    """
     # if you specify a collection the tool is in already it will remove it from that collection
     global conn
     cursor = conn.cursor()
@@ -993,6 +1042,13 @@ def add_to_collection(uname, barcode, tool_name):
 
 
 def add_to_category(uname, barcode, tool_name):
+    """
+    Adds a tool to a category, creating the category if it doesn't exist yet.
+    :param uname: username of the owner of the tool.
+    :param barcode: barcode of the tool
+    :param tool_name: name of the tool
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -1038,6 +1094,13 @@ def add_to_category(uname, barcode, tool_name):
 
 
 def sell(uname, barcode, tool_name):
+    """
+    Sells a tool to another user, transferring ownership as well.
+    :param uname: username of user who currently owns the tool.
+    :param barcode: barcode of the tool
+    :param tool_name: name of the tool
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -1085,6 +1148,13 @@ def sell(uname, barcode, tool_name):
 
 
 def set_returned(uname, barcode, tool_name):
+    """
+    Mark a tool as returned.
+    :param uname: username of user who owns the tool.
+    :param barcode: barcode of the tool
+    :param tool_name: name of the tool
+    :return: None
+    """
     global conn
     cursor = conn.cursor()
 
@@ -1113,44 +1183,6 @@ def set_returned(uname, barcode, tool_name):
         print('This tool is not lent out')
         input('Press Enter to exit...')
         return
-
-
-
-
-###############################################################################
-#                         OLD FUNCTIONS / DEBUGGING
-###############################################################################
-
-
-def add_test(conn, id, info, owner, rented):
-    # where the fun begins
-    cur = conn.cursor()
-
-    cur.execute("""
-    INSERT INTO "TestTable" ("username", "Information", "Owner", "Rented")
-    VALUES (%s, %s, %s, %s)
-    """, (id, info, owner, rented))
-
-    conn.commit()
-    cur.close()
-
-    print("Added an entry to testTable")
-
-
-def get_from_table():
-    global conn
-    cursor = conn.cursor()
-
-    sql = '''
-    SELECT * FROM "TestTable"
-    '''
-    cursor.execute(sql)
-
-    items = cursor.fetchall()
-    i = 0
-    for item in items:
-        print(item[0], item[1])
-    exit()
 
 
 if __name__ == '__main__':
