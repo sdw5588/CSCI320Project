@@ -107,7 +107,7 @@ def set_returned(uname, barcode):
             '''
             cursor.execute(sql, (barcode,))
             print('...Successfully marked as returned')
-            sleep(.7)
+            #sleep(.7)
             cursor.close()
     else:
         print('This tool is not lent out')
@@ -277,7 +277,7 @@ def lend(uname, barcode, lendable, borrow_uname, lend_time):
             return
 
     if not lendable:
-        print(tool_name, 'is not marked as lendable, would you like to change this and lend anyways?')
+        print('this tool is not marked as lendable, would you like to change this and lend anyways?')
         force_lend = input('\n(y/n): ')
         if force_lend[0] == 'y':
             sql = '''
@@ -301,7 +301,7 @@ def lend(uname, barcode, lendable, borrow_uname, lend_time):
     cursor.execute(sql, (borrow_uname, barcode, start_date, due_date))
 
     print('...Successfully Lent')
-    sleep(.7)
+    #sleep(.7)
     cursor.close()
 
 
@@ -320,7 +320,7 @@ barcodes, tool_names, lend_list = view_tools(None)
 
 os.system('cls')
 
-for i in range(6):
+for i in range(100):
     user_to = random.choice(uname_list)
     barcode = random.choice(barcodes)
     owner = get_tool_owner(barcode)
