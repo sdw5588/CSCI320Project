@@ -106,7 +106,6 @@ def set_returned(uname, barcode):
             WHERE "barcode" = %s AND "returned" = 'false'
             '''
             cursor.execute(sql, (barcode,))
-            conn.commit()
             print('...Successfully marked as returned')
             sleep(.7)
             cursor.close()
@@ -301,7 +300,6 @@ def lend(uname, barcode, lendable, borrow_uname, lend_time):
     '''
     cursor.execute(sql, (borrow_uname, barcode, start_date, due_date))
 
-    conn.commit()
     print('...Successfully Lent')
     sleep(.7)
     cursor.close()
@@ -322,7 +320,7 @@ barcodes, tool_names, lend_list = view_tools(None)
 
 os.system('cls')
 
-for i in range(1):
+for i in range(6):
     user_to = random.choice(uname_list)
     barcode = random.choice(barcodes)
     owner = get_tool_owner(barcode)
@@ -335,7 +333,8 @@ for i in range(1):
 
     print('lending', barcode, 'of', owner, 'to', user_to, 'for', time)
     lend(owner, barcode, lendable, user_to, time)
-    chance = random.choice([0, 0, 0])
+    chance = random.choice([1, 0, 0])
     if chance:
         print('RETURNING too')
         set_returned(owner, barcode)
+    conn.commit()
