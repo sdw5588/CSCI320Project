@@ -78,7 +78,7 @@ def get_lent_tools(uname):
 
     return lent_list
 
-def set_returned(uname, barcode, tool_name):
+def set_returned(uname, barcode):
     """
     Mark a tool as returned.
     :param uname: username of user who owns the tool.
@@ -320,8 +320,8 @@ for i in range(100):
         pass;
 
     print('lending', barcode, 'of', owner, 'to', user_to, 'for', time)
-    lend(owner, barcode, lendable, user_to, time)
-    chance = random.choice([1, 0, 0])
+    #lend(owner, barcode, lendable, user_to, time)
+    chance = random.choice([1])
     if chance:
         print('RETURNING too')
         set_returned(owner, barcode)
