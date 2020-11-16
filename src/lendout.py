@@ -320,7 +320,7 @@ for i in range(100):
         pass;
 
     print('lending', barcode, 'of', owner, 'to', user_to, 'for', time)
-    #lend(owner, barcode, lendable, user_to, time)
+    lend(owner, barcode, lendable, user_to, time)
     chance = random.choice([1])
     if chance:
         print('RETURNING too')
