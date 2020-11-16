@@ -1162,13 +1162,13 @@ def set_returned(uname, barcode, tool_name):
     lent_bcs = [tool[1] for tool in lent_tools]
     returned = [tool[4] for tool in lent_tools]
 
-    if barcode in lent_bcs:
-        if returned[lent_bcs.index(barcode)]:
-            print('This tool is already returned to you')
-            input('Press Enter to exit...')
-            return
-        else:
-            #mark it as returned
+    if barcode not in lent_bcs:
+        print('This tool is not lent out')
+        input('Press Enter to exit...')
+        return
+    for i in range(0, len(returned)):
+        if lent_bcs[i] == barcode and not returned[i]:
+            # mark it as returned
             sql = '''
             UPDATE "borrows"
             SET "returned" = 'true'
