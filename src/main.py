@@ -1179,10 +1179,12 @@ def set_returned(uname, barcode, tool_name):
             print('...Successfully marked as returned')
             sleep(.7)
             cursor.close()
-    else:
-        print('This tool is not lent out')
-        input('Press Enter to exit...')
-        return
+            return
+    # then must be returned
+    print('This tool is already returned to you')
+    input('Press Enter to exit...')
+    return
+
 
 
 if __name__ == '__main__':
