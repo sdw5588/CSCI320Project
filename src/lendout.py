@@ -95,7 +95,6 @@ def set_returned(uname, barcode, tool_name):
 
     if barcode not in lent_bcs:
         print('This tool is not lent out')
-        input('Press Enter to exit...')
         return
     for i in range(0, len(returned)):
         if lent_bcs[i] == barcode and not returned[i]:
@@ -106,14 +105,14 @@ def set_returned(uname, barcode, tool_name):
             WHERE "barcode" = %s AND "returned" = 'false'
             '''
             cursor.execute(sql, (barcode,))
-            conn.commit()
             print('...Successfully marked as returned')
-            sleep(.7)
+            #sleep(.7)
             cursor.close()
-    else:
-        print('This tool is not lent out')
-        input('Press Enter to exit...')
-        return
+            return
+    # then must be returned
+    print('This tool is already returned to you')
+    return
+
 
 
 def view_tools(usr_id):
@@ -273,22 +272,10 @@ def lend(uname, barcode, lendable, borrow_uname, lend_time):
 
     if barcode in lent_bcs:
         if not returned[lent_bcs.index(barcode)]:
-            print('This tool is already lent out, mark it as returned or try a different tool')
-            input('Press Enter to exit...')
             return
 
     if not lendable:
-        print('this tool is not marked as lendable, would you like to change this and lend anyways?')
-        force_lend = input('\n(y/n): ')
-        if force_lend[0] == 'y':
-            sql = '''
-            UPDATE "tool"
-            SET "lendable" = 'true'
-            WHERE "barcode" = %s
-            '''
-            cursor.execute(sql, (barcode,))
-        else:
-            return
+        return
 
     #time to actually lend
 
