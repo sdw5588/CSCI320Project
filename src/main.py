@@ -8,6 +8,7 @@ from time import sleep
 from datetime import datetime, timedelta
 from tabulate import tabulate
 import random
+from collections import Counter
 
 # The video for this is in the Phase 3 report and also here:
 # ​https://www.youtube.com/watch?v=Tqb8EXflZdE
@@ -58,6 +59,7 @@ def show_main_menu():
     print(' 2. User Menu')
     print(' 3. Browse Tools')
     print(' 4. List Users')
+    print(' 5. List Most Lent Tools')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
@@ -94,6 +96,10 @@ def start():
         elif n == 4:
             os.system('cls')
             show_all_users(None)  # if an id is specified it shows all but that id
+            input('Press Enter to continue...')
+        elif n == 5:
+            os.system('cls')
+            most_lent_tools()
             input('Press Enter to continue...')
         else:
             os.system('cls')
@@ -296,6 +302,17 @@ def tools_by_coll():
     bc_list = get_tools_in_coll(None, collection)
 
     print_tool_table(bc_list)
+
+
+def most_lent_tools():
+    table = view_borrowed(None)
+    tools_borrowed = [tool[0] for tool in table]
+
+    c = Counter(tools_borrowed)
+    print(c.most_common(3))
+
+    #print(tools_borrowed)
+
 
 ###############################################################################
 #                         USER MENU
@@ -669,16 +686,21 @@ def get_tool_name(barcode):
 def view_borrowed(uname):
     """
     find and return the tools that a user is borrowing or has borrowed.
-    :param uname: username of the user.
+    :param uname: username of the user, if this is blank returns all lent tools.
     :return: table data of tools in tabulate format.
     """
     global conn
     cursor = conn.cursor()
 
-    sql='''
-    SELECT "barcode", "start_date", "due_date", "returned" FROM "borrows"
-    WHERE "username" = %s
-    '''
+    if uname == None:
+        sql='''
+        SELECT "barcode", "start_date", "due_date", "returned" FROM "borrows"
+        '''
+    else:
+        sql='''
+        SELECT "barcode", "start_date", "due_date", "returned" FROM "borrows"
+        WHERE "username" = %s
+        '''
     cursor.execute(sql, (uname,))
     data = cursor.fetchall()
     table = [(tool[0], get_tool_name(tool[0]), tool[1], tool[2], tool[3]) for tool in data]
