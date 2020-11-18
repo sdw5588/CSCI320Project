@@ -1287,18 +1287,14 @@ def show_top_lent():
     cursor = conn.cursor()
     cursor.execute(sql)
     bar_codes = cursor.fetchall()
-    #print(str(bar_codes))
     new_bar_codes = []
     for entry in bar_codes:
         new_bar_codes.append(entry[0])
     bar_codes = new_bar_codes;
-    #print(str(bar_codes))
     bar_freq_list = []
     for code in bar_codes:
         add_barcode(bar_freq_list, code)
-    #print(str(bar_freq_list))
     bar_freq_list.sort(key=lambda x: x[1], reverse=True)
-    #print(str(bar_freq_list))
     tool_info_list = []
     for i in range(0,19):
         t = get_tool_details(bar_freq_list[i][0])
@@ -1306,6 +1302,63 @@ def show_top_lent():
         tool_info_list.append(n)
     print(tabulate(tool_info_list, headers=['NAME', 'FREQUENCY', 'OWNER', 'COLLECTION', 'CATEGORIES']))
     print()
+
+
+def show_most_borrower():
+    """
+    Display the top 20 users who borrow the most.
+    :return: None
+    """
+    global conn
+    sql = '''
+        SELECT "username" from "borrows"
+        '''
+
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    unames = cursor.fetchall()
+    new_unames = []
+    for entry in unames:
+        new_unames.append(entry[0])
+    unames = new_unames
+    name_freq_list = []
+
+    for name in unames:
+        add_barcode(name_freq_list, name)
+    name_freq_list.sort(key=lambda x: x[1], reverse=True)
+
+    name_list = []
+
+    for i in range(0, 19):
+        t = get_user_info(name_freq_list[i][0])
+        n = (name_freq_list[i][0], name_freq_list[i][1], t[1], t[2])
+        name_list.append(n)
+    print(tabulate(name_list, headers=['USERNAME', 'FREQUENCY', 'FIRST NAME', 'LAST NAME']))
+    print()
+
+
+def get_user_info(uname):
+    """
+    Get the information of user in database
+    :param uname: uname of a specific user. If None, then displays all users.
+    :return: the attributes of a specific user or all the users.
+    """
+    global conn
+    cursor = conn.cursor()
+
+    if uname is None:
+        return
+    else:
+        # Get a list of all users but the uname given
+        sql = '''
+        SELECT "username", "first_name", "last_name" FROM "user"
+        WHERE "username" = %s
+        '''
+    cursor.execute(sql, (uname,))
+    all_users = cursor.fetchall()
+
+    # print('--ID--', '-FIRST-', '-LAST-', sep='\t')
+    return [all_users[0][0], all_users[0][1], all_users[0][2]]
 
 
 def analytics():
@@ -1318,6 +1371,7 @@ def analytics():
         print(' -- -- -- ALL TOOL MENU -- -- -- ')
         print(' 0. Exit')
         print(' 1. Most lent tools')
+        print(' 2. Most common borrowers')
         print(' -- -- -- -- -- -- -- -- -- -- ')
 
         try:
@@ -1327,8 +1381,9 @@ def analytics():
         if n == 0:
             return
         elif n == 1:
-            # by cat
             show_top_lent()
+        elif n == 2:
+            show_most_borrower()
         else:
             pass
 
