@@ -803,9 +803,15 @@ def recommend_tool(uname):
         if recommendation not in tools_borrowed:
             borrowed = False
 
-    print('Since you always borrow tools in the', popular_cat, 'category we recommend:')
-    print(recommendation, '|', get_tool_name(recommendation),
-        '\nThis tool can be borrowed from', get_tool_owner(recommendation))
+    print('Since you always borrow tools in the', popular_cat, 'category we recommend:\n')
+    print(recommendation, '|', get_tool_name(recommendation))
+
+    owner = get_tool_owner(recommendation)
+    if owner == uname:
+        print('\nYou own this tool! so you dont even neet to borrow it!!!')
+    else:
+        print('\nThis tool can be borrowed from', owner)
+
 
 
 
