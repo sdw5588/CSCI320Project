@@ -187,7 +187,7 @@ def show_all_users(uname):
         # print(id_list[i], fname_list[i], lname_list[i], sep='\t')
         i += 1
 
-    print(tabulate(all_users, headers=['USRNAME', 'FIRST', 'LAST']))
+    print(tabulate(all_users, headers=['USERNAME', 'FIRST', 'LAST']))
     print(' -- -- ')
 
     return uname_list, f_name_list, l_name_list
