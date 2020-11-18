@@ -1376,14 +1376,17 @@ def analytics():
 
         try:
             n = int(input('Enter option : '))
+            os.system('cls')
         except ValueError:
             n = -1
         if n == 0:
             return
         elif n == 1:
             show_top_lent()
+            input('Press Enter to return...')
         elif n == 2:
             show_most_borrower()
+            input('Press Enter to return...')
         else:
             pass
 
