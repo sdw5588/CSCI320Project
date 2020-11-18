@@ -1368,7 +1368,7 @@ def analytics():
         """
     while True:
         os.system('cls')
-        print(' -- -- -- ALL TOOL MENU -- -- -- ')
+        print(' -- -- - ANALYTICS MENU - -- -- ')
         print(' 0. Exit')
         print(' 1. Most lent tools')
         print(' 2. Most common borrowers')
