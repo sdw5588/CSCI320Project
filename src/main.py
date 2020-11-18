@@ -8,7 +8,6 @@ from time import sleep
 from datetime import datetime, timedelta
 from tabulate import tabulate
 import random
-from collections import Counter
 
 # The video for this is in the Phase 3 report and also here:
 # ​https://www.youtube.com/watch?v=Tqb8EXflZdE
@@ -59,7 +58,7 @@ def show_main_menu():
     print(' 2. User Menu')
     print(' 3. Browse Tools')
     print(' 4. List Users')
-    print(' 5. List Most Lent Tools')
+    print(' 5. Analytics')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
@@ -99,8 +98,7 @@ def start():
             input('Press Enter to continue...')
         elif n == 5:
             os.system('cls')
-            most_lent_tools()
-            input('Press Enter to continue...')
+            analytics()
         else:
             os.system('cls')
 
@@ -189,7 +187,7 @@ def show_all_users(uname):
         # print(id_list[i], fname_list[i], lname_list[i], sep='\t')
         i += 1
 
-    print(tabulate(all_users, headers=['USRNAME', 'FIRST', 'LAST']))
+    print(tabulate(all_users, headers=['USERNAME', 'FIRST', 'LAST']))
     print(' -- -- ')
 
     return uname_list, f_name_list, l_name_list
@@ -302,17 +300,6 @@ def tools_by_coll():
     bc_list = get_tools_in_coll(None, collection)
 
     print_tool_table(bc_list)
-
-
-def most_lent_tools():
-    table = view_borrowed(None)
-    tools_borrowed = [tool[0] for tool in table]
-
-    c = Counter(tools_borrowed)
-    print(c.most_common(3))
-
-    #print(tools_borrowed)
-
 
 ###############################################################################
 #                         USER MENU
@@ -686,21 +673,16 @@ def get_tool_name(barcode):
 def view_borrowed(uname):
     """
     find and return the tools that a user is borrowing or has borrowed.
-    :param uname: username of the user, if this is blank returns all lent tools.
+    :param uname: username of the user.
     :return: table data of tools in tabulate format.
     """
     global conn
     cursor = conn.cursor()
 
-    if uname == None:
-        sql='''
-        SELECT "barcode", "start_date", "due_date", "returned" FROM "borrows"
-        '''
-    else:
-        sql='''
-        SELECT "barcode", "start_date", "due_date", "returned" FROM "borrows"
-        WHERE "username" = %s
-        '''
+    sql='''
+    SELECT "barcode", "start_date", "due_date", "returned" FROM "borrows"
+    WHERE "username" = %s
+    '''
     cursor.execute(sql, (uname,))
     data = cursor.fetchall()
     table = [(tool[0], get_tool_name(tool[0]), tool[1], tool[2], tool[3]) for tool in data]
@@ -1264,6 +1246,146 @@ def set_returned(uname, barcode, tool_name):
     input('Press Enter to exit...')
     return
 
+
+def is_in(li, bar_code):
+    """
+    helper method for show_top_lent, check if barcode is in list
+    :param li: list
+    :param bar_code: barcode
+    :return: index of barcode if it is in list, or -1 otherwise
+    """
+    for i in range(0, len(li)):
+        if li[i][0] == bar_code:
+            return i
+    return -1
+
+
+def add_barcode(li, bar_code):
+    """
+    Add barcode to list, helper function for show_top_lent
+    :param li: list
+    :param bar_code: barcode
+    :return: None
+    """
+    n = is_in(li, bar_code)
+    if n == -1:
+        li.append([bar_code, 1])
+    else:
+        li[n][1] += 1
+
+
+def show_top_lent():
+    """
+    Display the top 20 most lent items.
+    :return: None
+    """
+    global conn
+    sql = '''
+        SELECT "barcode" from "borrows"
+        '''
+
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    bar_codes = cursor.fetchall()
+    new_bar_codes = []
+    for entry in bar_codes:
+        new_bar_codes.append(entry[0])
+    bar_codes = new_bar_codes;
+    bar_freq_list = []
+    for code in bar_codes:
+        add_barcode(bar_freq_list, code)
+    bar_freq_list.sort(key=lambda x: x[1], reverse=True)
+    tool_info_list = []
+    for i in range(0,19):
+        t = get_tool_details(bar_freq_list[i][0])
+        n = (t[0], bar_freq_list[i][1], t[2], t[3], t[4])
+        tool_info_list.append(n)
+    print(tabulate(tool_info_list, headers=['NAME', 'FREQUENCY', 'OWNER', 'COLLECTION', 'CATEGORIES']))
+    print()
+
+
+def show_most_borrower():
+    """
+    Display the top 20 users who borrow the most.
+    :return: None
+    """
+    global conn
+    sql = '''
+        SELECT "username" from "borrows"
+        '''
+
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    unames = cursor.fetchall()
+    new_unames = []
+    for entry in unames:
+        new_unames.append(entry[0])
+    unames = new_unames
+    name_freq_list = []
+
+    for name in unames:
+        add_barcode(name_freq_list, name)
+    name_freq_list.sort(key=lambda x: x[1], reverse=True)
+
+    name_list = []
+
+    for i in range(0, 19):
+        t = get_user_info(name_freq_list[i][0])
+        n = (name_freq_list[i][0], name_freq_list[i][1], t[1], t[2])
+        name_list.append(n)
+    print(tabulate(name_list, headers=['USERNAME', 'FREQUENCY', 'FIRST NAME', 'LAST NAME']))
+    print()
+
+
+def get_user_info(uname):
+    """
+    Get the information of user in database
+    :param uname: uname of a specific user. If None, then displays all users.
+    :return: the attributes of a specific user or all the users.
+    """
+    global conn
+    cursor = conn.cursor()
+
+    if uname is None:
+        return
+    else:
+        # Get a list of all users but the uname given
+        sql = '''
+        SELECT "username", "first_name", "last_name" FROM "user"
+        WHERE "username" = %s
+        '''
+    cursor.execute(sql, (uname,))
+    all_users = cursor.fetchall()
+
+    # print('--ID--', '-FIRST-', '-LAST-', sep='\t')
+    return [all_users[0][0], all_users[0][1], all_users[0][2]]
+
+
+def analytics():
+    """
+        Display the tool menu and executes appropriate command.
+        :return: None
+        """
+    while True:
+        os.system('cls')
+        print(' -- -- -- ALL TOOL MENU -- -- -- ')
+        print(' 0. Exit')
+        print(' 1. Most lent tools')
+        print(' 2. Most common borrowers')
+        print(' -- -- -- -- -- -- -- -- -- -- ')
+
+        try:
+            n = int(input('Enter option : '))
+        except ValueError:
+            n = -1
+        if n == 0:
+            return
+        elif n == 1:
+            show_top_lent()
+        elif n == 2:
+            show_most_borrower()
+        else:
+            pass
 
 
 if __name__ == '__main__':
