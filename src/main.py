@@ -58,6 +58,7 @@ def show_main_menu():
     print(' 2. User Menu')
     print(' 3. Browse Tools')
     print(' 4. List Users')
+    print(' 5. Analytics')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
@@ -95,6 +96,9 @@ def start():
             os.system('cls')
             show_all_users(None)  # if an id is specified it shows all but that id
             input('Press Enter to continue...')
+        elif n == 5:
+            os.system('cls')
+            analytics()
         else:
             os.system('cls')
 
@@ -1302,6 +1306,32 @@ def show_top_lent():
         tool_info_list.append(n)
     print(tabulate(tool_info_list, headers=['NAME', 'FREQUENCY', 'OWNER', 'COLLECTION', 'CATEGORIES']))
     print()
+
+
+def analytics():
+    """
+        Display the tool menu and executes appropriate command.
+        :return: None
+        """
+    while True:
+        os.system('cls')
+        print(' -- -- -- ALL TOOL MENU -- -- -- ')
+        print(' 0. Exit')
+        print(' 1. Most lent tools')
+        print(' -- -- -- -- -- -- -- -- -- -- ')
+
+        try:
+            n = int(input('Enter option : '))
+        except ValueError:
+            n = -1
+        if n == 0:
+            return
+        elif n == 1:
+            # by cat
+            show_top_lent()
+        else:
+            pass
+
 
 if __name__ == '__main__':
     main()
