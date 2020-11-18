@@ -308,7 +308,7 @@ barcodes, tool_names, lend_list = view_tools(None)
 
 os.system('cls')
 
-for i in range(100):
+for i in range(200):
     user_to = random.choice(uname_list)
     barcode = random.choice(barcodes)
     owner = get_tool_owner(barcode)

@@ -7,6 +7,7 @@ import os
 from time import sleep
 from datetime import datetime, timedelta
 from tabulate import tabulate
+import random
 
 # The video for this is in the Phase 3 report and also here:
 # ​https://www.youtube.com/watch?v=Tqb8EXflZdE
@@ -346,6 +347,7 @@ def show_user_menu():
     print(' 3. View your Tools')
     print(' 4. View your Borrowed Tools')
     print(' 5. View your Collections')
+    print(' 6. Recommended Tool')
     print(' -- -- -- -- -- -- -- -- -- -- ')
 
 
@@ -358,7 +360,7 @@ def user_menu(uname, user_name):
     """
     while True:
         os.system('cls')
-        print('Hello,', user_name[0])
+        print('Hello,', user_name[0], user_name[1])
         show_user_menu()
         try:
             n = int(input('Enter option : '))
@@ -384,12 +386,16 @@ def user_menu(uname, user_name):
         # View my borrowed tools
         elif n == 4:
             os.system('cls')
-            view_borrowed(uname)
+            print_borrowed(view_borrowed(uname))
             input('Press Enter to return...')
         # View my collections
         elif n == 5:
             os.system('cls')
             view_collections(uname)
+        elif n == 6:
+            os.system('cls')
+            recommend_tool(uname)
+            input('Press Enter to return...')
         else:
             os.system('cls')
 
@@ -662,9 +668,9 @@ def get_tool_name(barcode):
 
 def view_borrowed(uname):
     """
-    find and print the tools that a user is borrowing or has borrowed.
+    find and return the tools that a user is borrowing or has borrowed.
     :param uname: username of the user.
-    :return: None
+    :return: table data of tools in tabulate format.
     """
     global conn
     cursor = conn.cursor()
@@ -677,8 +683,15 @@ def view_borrowed(uname):
     data = cursor.fetchall()
     table = [(tool[0], get_tool_name(tool[0]), tool[1], tool[2], tool[3]) for tool in data]
 
-    print(tabulate(table, headers=['BARCODE', 'NAME', 'START', 'DUE', 'RETURNED']))
+    return table
 
+def print_borrowed(table):
+    """
+    print the tools that a user is borrowing or has borrowed.
+    :param table: table data of tools in tabulate format.
+    :return: None
+    """
+    print(tabulate(table, headers=['BARCODE', 'NAME', 'START', 'DUE', 'RETURNED']))
 
 def get_tool_details(barcode):
     """
@@ -757,6 +770,44 @@ def get_tools_in_coll(uname, coll_name):
     bc_list = [tool[0] for tool in coll_tools]
 
     return bc_list
+
+
+def recommend_tool(uname):
+    """
+    find and print the tools that a user is likely to borrow.
+    :param uname: username of the user.
+    :return: None
+    """
+
+    table = view_borrowed(uname)
+
+    tools_borrowed = [tool[0] for tool in table]
+    cats_borrowed = [cat for bc in tools_borrowed for cats in get_tool_details(bc)[4] for cat in cats]
+    popular_cat = max(set(cats_borrowed), key = cats_borrowed.count)
+
+    global conn
+    cursor = conn.cursor()
+
+    sql='''
+    SELECT "barcode" from "is_in"
+    WHERE "cat_name"=%s
+    '''
+    cursor.execute(sql, (popular_cat,))
+    all_barcodes = cursor.fetchall()
+    barcodes = [barcode[0] for barcode in all_barcodes]
+
+    borrowed = True
+
+    while borrowed:
+        recommendation = random.choice(barcodes)
+        if recommendation not in tools_borrowed:
+            borrowed = False
+
+    print('Since you always borrow tools in the', popular_cat, 'category we recommend:')
+    print(recommendation, '|', get_tool_name(recommendation),
+        '\nThis tool can be borrowed from', get_tool_owner(recommendation))
+
+
 
 
 ###############################################################################
