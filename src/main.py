@@ -1243,6 +1243,65 @@ def set_returned(uname, barcode, tool_name):
     return
 
 
+def is_in(li, bar_code):
+    """
+    helper method for show_top_lent, check if barcode is in list
+    :param li: list
+    :param bar_code: barcode
+    :return: index of barcode if it is in list, or -1 otherwise
+    """
+    for i in range(0, len(li)):
+        if li[i][0] == bar_code:
+            return i
+    return -1
+
+
+def add_barcode(li, bar_code):
+    """
+    Add barcode to list, helper function for show_top_lent
+    :param li: list
+    :param bar_code: barcode
+    :return: None
+    """
+    n = is_in(li, bar_code)
+    if n == -1:
+        li.append([bar_code, 1])
+    else:
+        li[n][1] += 1
+
+
+def show_top_lent():
+    """
+    Display the top 20 most lent items.
+    :return: None
+    """
+    global conn
+    sql = '''
+        SELECT "barcode" from "borrows"
+        '''
+
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    bar_codes = cursor.fetchall()
+    #print(str(bar_codes))
+    new_bar_codes = []
+    for entry in bar_codes:
+        new_bar_codes.append(entry[0])
+    bar_codes = new_bar_codes;
+    #print(str(bar_codes))
+    bar_freq_list = []
+    for code in bar_codes:
+        add_barcode(bar_freq_list, code)
+    #print(str(bar_freq_list))
+    bar_freq_list.sort(key=lambda x: x[1], reverse=True)
+    #print(str(bar_freq_list))
+    tool_info_list = []
+    for i in range(0,19):
+        t = get_tool_details(bar_freq_list[i][0])
+        n = (t[0], bar_freq_list[i][1], t[2], t[3], t[4])
+        tool_info_list.append(n)
+    print(tabulate(tool_info_list, headers=['NAME', 'FREQUENCY', 'OWNER', 'COLLECTION', 'CATEGORIES']))
+    print()
 
 if __name__ == '__main__':
     main()
